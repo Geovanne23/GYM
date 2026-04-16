@@ -3,709 +3,399 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Além da Genética - Treinos</title>
-  <link rel="icon" type="image/x-icon" href="img/fav.png">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#060609" />
+  <title>Além da Genética</title>
+  <meta name="description" content="Plano de treino semanal com técnicas avançadas de hipertrofia." />
+  <link rel="icon" type="image/x-icon" href="img/fav.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700;800&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="styles.css" />
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Oswald', 'sans-serif'],
-          },
-          colors: {
-            dark: { 950: '#050508', 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a25', 600: '#252532' },
-            primary: '#e63946',
-            accent: '#f59e0b',
-            emerald: '#10b981',
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .modal-content {
-      background: linear-gradient(145deg, #1a1a25, #12121a);
-      border: 1px solid rgba(230, 57, 70, 0.3);
-      border-radius: 16px;
-      padding: 1.5rem;
-      max-width: 320px;
-      width: 90%;
-      transform: scale(0.9);
-      transition: transform 0.3s ease;
-    }
-
-    .modal-overlay.active .modal-content {
-      transform: scale(1);
-    }
-
-    .modal-btn {
-      padding: 0.6rem 1.2rem;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      transition: all 0.25s ease;
-      cursor: pointer;
-    }
-
-    .modal-btn-confirm {
-      background: linear-gradient(135deg, #dc2626, #b91c1c);
-      border: none;
-      color: white;
-    }
-
-    .modal-btn-confirm:hover {
-      box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
-      transform: translateY(-2px);
-    }
-
-    .modal-btn-cancel {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #9ca3af;
-    }
-
-    .modal-btn-cancel:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-    }
-
-    .btn-concluir {
-      border: 2px solid var(--emerald);
-      background: transparent;
-      color: var(--emerald-light);
-      font-weight: 700;
-      padding: 0.5rem 1rem;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      font-size: 0.8rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn-concluir::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
-
-    .btn-concluir:hover {
-      background: linear-gradient(135deg, var(--emerald), #059669);
-      color: white;
-      box-shadow:
-        0 0 25px rgba(16, 185, 129, 0.5),
-        0 8px 20px rgba(16, 185, 129, 0.3);
-      transform: scale(1.08) translateY(-3px);
-    }
-
-    .btn-concluir:hover::before {
-      left: 100%;
-    }
-
-    .btn-concluir.concluido {
-      background: linear-gradient(135deg, var(--emerald), #059669);
-      color: white;
-      border-color: var(--emerald);
-    }
-
-    .btn-treino-completo {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.7rem 1.2rem;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 2px solid var(--emerald);
-      background: transparent;
-      color: var(--emerald-light);
-      margin-top: 1rem;
-    }
-
-    .btn-treino-completo:hover {
-      background: linear-gradient(135deg, var(--emerald), #059669);
-      color: white;
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-    }
-
-    .btn-treino-completo.completo {
-      background: linear-gradient(135deg, var(--emerald), #059669);
-      color: white;
-      border-color: var(--emerald);
-    }
-  </style>
 </head>
 
-<body class="font-sans">
-  <!-- Animated Background -->
-  <div class="bg-gym">
-    <svg class="floating float-1" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="0.5">
-      <rect x="6" y="6" width="12" height="12" rx="2" />
-    </svg>
-    <svg class="floating float-2" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="0.5">
-      <circle cx="12" cy="12" r="9" />
-    </svg>
-    <svg class="floating float-3" width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="0.5">
-      <path d="M6.5 2l11 10-5 1-3 5-2.5-6z" />
-    </svg>
-    <svg class="floating float-4" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="0.5">
-      <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" />
-    </svg>
-    <svg class="floating float-5" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="0.5">
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-    </svg>
-  </div>
+<body>
 
-  <div class="max-w-3xl mx-auto px-3 py-5 relative z-10">
-    <header class="header-glow rounded-2xl p-5 mb-5 text-center">
-      <div
-        class="inline-flex items-center gap-2 bg-primary/15 px-4 py-2 rounded-full mb-4 border border-primary/25 animate-pulse-slow">
-        <i class="ph-fill ph-dumbbell text-primary text-xl"></i>
-        <span class="text-primary text-xs font-bold tracking-widest uppercase">Metodologia</span>
+  <div class="bg"></div>
+
+  <div class="app">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        <span class="eyebrow-text">Metodologia Avançada</span>
       </div>
-      <h1 class="font-display text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">
-        <span
-          class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-red-400 to-primary animate-gradient">Além
-          da</span>
-        <span class="text-white">Genética</span>
+
+      <h1 class="h-title">
+        <span class="t-red">Além da</span><br>Genética
       </h1>
-      <p class="text-gray-400 text-sm md:text-base max-w-md mx-auto">Seu plano de treino semanal com técnicas avançadas
-        de hipertrofia</p>
-      <div class="progress-bar mt-4">
-        <div class="progress-fill" id="progressFill"></div>
+
+      <p class="h-desc">Plano semanal de hipertrofia com rest-pause, drop set e pico de contração.</p>
+
+      <div class="pg-row">
+        <div class="pg-track">
+          <div class="pg-fill" id="pFill"></div>
+        </div>
+        <span class="pg-pct" id="pText">0%</span>
       </div>
-      <p class="text-gray-500 text-xs mt-2" id="progressText">Progresso: 0%</p>
+
+      <div class="stats">
+        <div class="stat"><span class="stat-n cr">5</span><span class="stat-l">Treinos</span></div>
+        <div class="stat"><span class="stat-n cg">36</span><span class="stat-l">Exercícios</span></div>
+        <div class="stat"><span class="stat-n ce" id="sDone">0</span><span class="stat-l">Feitos</span></div>
+      </div>
     </header>
 
-    <nav id="tabs" class="tabs-container mb-4"></nav>
-    <section id="content"></section>
+    <nav id="tabs" class="tabs"></nav>
+    <main id="content"></main>
 
-    <footer class="text-center mt-8 text-gray-500 text-xs">
-      <p class="flex items-center justify-center gap-2">
-        <i class="ph-fill ph-check-circle text-emerald"></i>
-        Progresso salvo automaticamente
-      </p>
+    <footer class="footer">
+      <i class="ph-fill ph-check-circle"></i>
+      Progresso salvo automaticamente
     </footer>
   </div>
 
-  <div id="modalConfirm" class="modal-overlay">
-    <div class="modal-content text-center">
-      <div class="text-red-500 text-3xl mb-3"><i class="ph-fill ph-warning"></i></div>
-      <h3 class="text-white font-bold text-lg mb-2">Confirmar Ação</h3>
-      <p id="modalMessage" class="text-gray-400 text-sm mb-5">Tem certeza que deseja continuar?</p>
-      <div class="flex gap-3 justify-center">
-        <button id="modalCancel" class="modal-btn modal-btn-cancel">Cancelar</button>
-        <button id="modalConfirmBtn" class="modal-btn modal-btn-confirm">Confirmar</button>
+  <!-- MODAL -->
+  <div id="modal" class="modal-bg">
+    <div class="modal-card">
+      <div class="modal-icon"><i class="ph-fill ph-warning"></i></div>
+      <h2 class="modal-title">Confirmar</h2>
+      <p id="mMsg" class="modal-msg"></p>
+      <div class="modal-btns">
+        <button id="mNo" class="modal-btn btn-cancel">Cancelar</button>
+        <button id="mYes" class="modal-btn btn-confirm">Confirmar</button>
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "gym-workouts-v8";
+    const SK = 'adg-v12';
 
-    const tabsData = [
+    /* ---- icons for each day ---- */
+    const dayIcons = {
+      'Treino A': 'ph-fill ph-barbell',
+      'Treino B': 'ph-fill ph-person-arms-spread',
+      'Treino C': 'ph-fill ph-sneaker-move',
+      'Treino D': 'ph-fill ph-barbell',
+      'Treino E': 'ph-fill ph-hand-fist',
+      'Descanso': 'ph-fill ph-moon-stars'
+    };
+
+    const D = [
       {
-        id: "semana", title: "Semana", type: "week", days: [
-          { day: "Seg", plan: "Treino A" }, { day: "Ter", plan: "Treino B" }, { day: "Qua", plan: "Treino C" },
-          { day: "Qui", plan: "Descanso" }, { day: "Sex", plan: "Treino D" }, { day: "Sáb", plan: "Treino E" }, { day: "Dom", plan: "Descanso" }
+        id: 'semana', title: 'Semana', type: 'week', days: [
+          { d: 'Seg', plan: 'Treino A', sub: 'Peito · Ombro · Tríceps' },
+          { d: 'Ter', plan: 'Treino B', sub: 'Costas · Bíceps' },
+          { d: 'Qua', plan: 'Treino C', sub: 'Membros Inferiores' },
+          { d: 'Qui', plan: 'Descanso', sub: 'Recuperação ativa' },
+          { d: 'Sex', plan: 'Treino D', sub: 'Ombros · Peito · Tríceps' },
+          { d: 'Sáb', plan: 'Treino E', sub: 'Bíceps · Costas · Abd' },
+          { d: 'Dom', plan: 'Descanso', sub: 'Repouso total' }
         ]
       },
       {
-        id: "treino-a", title: "Treino A", subtitle: "Peito, ombros e tríceps", alert: "Mobilidade de ombros", exercises: [
-          { id: "a-1", name: "Supino inclinado com halteres ou máquina", sets: [{ label: "Aquecimento", detail: "1-2 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "a-2", name: "Supino reto com halteres ou máquina", technique: "2 rest pause de 10 seg na última série", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "a-3", name: "Supino declinado barra ou máquina", sets: [{ label: "Ajuste", detail: "1 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 min)" }] },
-          { id: "a-4", name: "Voador", technique: "2 segundos de pico de contração + 1 dropset", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 10 a 15 (Intervalo 1 min)" }] },
-          { id: "a-5", name: "Elevação frontal", sets: [{ label: "Ajuste", detail: "1 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 min)" }] },
-          { id: "a-6", name: "Elevação lateral sentado com halteres", technique: "1 drop set", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 min)" }, { label: "Trabalho", detail: "2 x 8 a 12 (Intervalo 1 min)" }] },
-          { id: "a-7", name: "Tríceps francês na corda", sets: [{ label: "Ajuste", detail: "1 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "3 x 6 a 10 (Intervalo 2 min)" }] }
+        id: 'treino-a', title: 'Treino A', sub: 'Peito, Ombros e Tríceps',
+        alert: 'Mobilidade de ombros antes de começar',
+        ex: [
+          { id: 'a1', n: 'Supino Inclinado c/ Halteres ou Máquina', t: null, s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'a2', n: 'Supino Reto c/ Halteres ou Máquina', t: '2 rest-pause de 10s na última série', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'a3', n: 'Supino Declinado — Barra ou Máquina', t: null, s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2 min)' }] },
+          { id: 'a4', n: 'Voador', t: '2s pico de contração + 1 dropset', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 10–15 (1 min)' }] },
+          { id: 'a5', n: 'Elevação Frontal', t: null, s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2 min)' }] },
+          { id: 'a6', n: 'Elevação Lateral Sentado c/ Halteres', t: '1 drop set', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1 min)' }, { l: 'Trabalho', d: '2 × 8–12 (1 min)' }] },
+          { id: 'a7', n: 'Tríceps Francês na Corda', t: null, s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 6–10 (2 min)' }] }
         ]
       },
       {
-        id: "treino-b", title: "Treino B", subtitle: "Costas e bíceps", alert: "Mobilidade de ombros e alongamento peito", exercises: [
-          { id: "b-1", name: "Remada curvada com barra", technique: "2 segundos de pico de contração", sets: [{ label: "Aquecimento", detail: "1-2 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "b-2", name: "Remada baixa triângulo", technique: "2 pico + 2 rest pause", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "b-3", name: "Remada baixa pegada aberta ou máquina", technique: "2 segundos de pico", sets: [{ label: "Ajuste", detail: "1 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 min)" }] },
-          { id: "b-4", name: "Pulley frente triângulo", technique: "2 pico + 1 drop", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 8 a 12 (Intervalo 2 min)" }] },
-          { id: "b-5", name: "Meio Terra", sets: [{ label: "Aquecimento", detail: "1 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "b-6", name: "Hiper extensão no banco romano", sets: [{ label: "Trabalho", detail: "3 x 10 a 15 (Intervalo 90 seg)" }] },
-          { id: "b-7", name: "Rosca scott máquina", technique: "2 segundos de pico", sets: [{ label: "Ajuste", detail: "1 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "3 x 6 a 10 (Intervalo 2 min)" }] }
+        id: 'treino-b', title: 'Treino B', sub: 'Costas e Bíceps',
+        alert: 'Mobilidade de ombros + alongamento do peito',
+        ex: [
+          { id: 'b1', n: 'Remada Curvada com Barra', t: '2s pico de contração', s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'b2', n: 'Remada Baixa Triângulo', t: '2s pico + 2 rest-pause', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'b3', n: 'Remada Baixa Pegada Aberta / Máquina', t: '2s pico', s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2 min)' }] },
+          { id: 'b4', n: 'Pulley Frente Triângulo', t: '2s pico + 1 drop', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 8–12 (2 min)' }] },
+          { id: 'b5', n: 'Meio Terra', t: null, s: [{ l: 'Aquecimento', d: '1 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'b6', n: 'Hiperextensão no Banco Romano', t: null, s: [{ l: 'Trabalho', d: '3 × 10–15 (90s)' }] },
+          { id: 'b7', n: 'Rosca Scott Máquina', t: '2s pico de contração', s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 6–10 (2 min)' }] }
         ]
       },
       {
-        id: "treino-c", title: "Treino C", subtitle: "Membros inferiores", alert: "Mobilidade e alongamento posteriores de coxa, glúteos, quadríceps e ílio-psoas", exercises: [
-          { id: "c-1", name: "Agachamento livre", sets: [{ label: "Aquecimento", detail: "1-2 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "c-2", name: "Leg 45", technique: "2 rest pause", sets: [{ label: "Ajuste", detail: "1 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 8 a 12 (Intervalo 2 a 3 min)" }] },
-          { id: "c-3", name: "Extensor", technique: "2 segundos de pico", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 10 a 15 (Intervalo 1 min)" }] },
-          { id: "c-4", name: "Flexor deitado", technique: "2 segundos de pico", sets: [{ label: "Aquecimento", detail: "1 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "c-5", name: "Stiff", sets: [{ label: "Aquecimento", detail: "1 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 8 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "c-6", name: "Elevação de quadril", technique: "2 pico + 1 drop", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "c-7", name: "Panturrilha em pé (máquina ou smith)", technique: "2 segundos de pico", sets: [{ label: "Aquecimento", detail: "1-2 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "3 x 10 a 15 (Intervalo 2 min)" }] }
+        id: 'treino-c', title: 'Treino C', sub: 'Membros Inferiores',
+        alert: 'Mobilidade: posteriores, glúteos, quadríceps e ílio-psoas',
+        ex: [
+          { id: 'c1', n: 'Agachamento Livre', t: null, s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'c2', n: 'Leg 45°', t: '2 rest-pause', s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 8–12 (2–3 min)' }] },
+          { id: 'c3', n: 'Extensor', t: '2s pico', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 10–15 (1 min)' }] },
+          { id: 'c4', n: 'Flexor Deitado', t: '2s pico', s: [{ l: 'Aquecimento', d: '1 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'c5', n: 'Stiff', t: null, s: [{ l: 'Aquecimento', d: '1 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 8–10 (2–3 min)' }] },
+          { id: 'c6', n: 'Elevação de Quadril', t: '2s pico + 1 drop', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'c7', n: 'Panturrilha em Pé (máquina ou smith)', t: '2s pico', s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 10–15 (2 min)' }] }
         ]
       },
       {
-        id: "treino-d", title: "Treino D", subtitle: "Ombros, peito e tríceps", alert: "Mobilidade e alongamento ombros e tríceps", exercises: [
-          { id: "d-1", name: "Desenvolvimento com halteres", sets: [{ label: "Aquecimento", detail: "1-2 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "d-2", name: "Elevação frontal", technique: "2 rest pause", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 min)" }, { label: "Trabalho", detail: "2 x 10 a 15 (Intervalo 1 min)" }] },
-          { id: "d-3", name: "Elevação lateral sentado com halteres", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 min)" }, { label: "Trabalho", detail: "2 x 8 a 12 (Intervalo 1 min)" }] },
-          { id: "d-4", name: "Elevação lateral máquina ou unilateral no cabo", technique: "1 drop set", sets: [{ label: "Ajuste", detail: "1 x 4 a 6 (Intervalo 1 min)" }, { label: "Trabalho", detail: "2 x 8 a 12 (Intervalo 1 min)" }] },
-          { id: "d-5", name: "Voador", technique: "2 segundos de pico", sets: [{ label: "Aquecimento", detail: "1-2 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "3 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "d-6", name: "Tríceps corda", technique: "2 segundos de pico", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "3 x 6 a 10 (Intervalo 2 min)" }] },
-          { id: "d-7", name: "Tríceps testa corda banco 35 graus", technique: "2 rest pause", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "3 x 8 a 12 (Intervalo 2 min)" }] }
+        id: 'treino-d', title: 'Treino D', sub: 'Ombros, Peito e Tríceps',
+        alert: 'Mobilidade e alongamento de ombros e tríceps',
+        ex: [
+          { id: 'd1', n: 'Desenvolvimento com Halteres', t: null, s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'd2', n: 'Elevação Frontal', t: '2 rest-pause', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1 min)' }, { l: 'Trabalho', d: '2 × 10–15 (1 min)' }] },
+          { id: 'd3', n: 'Elevação Lateral Sentado c/ Halteres', t: null, s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1 min)' }, { l: 'Trabalho', d: '2 × 8–12 (1 min)' }] },
+          { id: 'd4', n: 'Elevação Lateral Máquina ou Unilateral no Cabo', t: '1 drop set', s: [{ l: 'Ajuste', d: '1 × 4–6 (1 min)' }, { l: 'Trabalho', d: '2 × 8–12 (1 min)' }] },
+          { id: 'd5', n: 'Voador', t: '2s pico', s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 6–10 (2–3 min)' }] },
+          { id: 'd6', n: 'Tríceps Corda', t: '2s pico', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 6–10 (2 min)' }] },
+          { id: 'd7', n: 'Tríceps Testa Corda Banco 35°', t: '2 rest-pause', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 8–12 (2 min)' }] }
         ]
       },
       {
-        id: "treino-e", title: "Treino E", subtitle: "Bíceps, costas e abdômen", alert: "Mobilidade de ombros e alongamento peito", exercises: [
-          { id: "e-1", name: "Rosca direta cabo", technique: "2 segundos de pico", sets: [{ label: "Aquecimento", detail: "1-2 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 a 3 min)" }] },
-          { id: "e-2", name: "Rosca scott máquina ou no cabo", technique: "2 pico + 2 rest pause", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 8 a 12 (Intervalo 2 min)" }] },
-          { id: "e-3", name: "Rosca direta corda", technique: "1 drop", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 10 a 15 (Intervalo 1 min)" }] },
-          { id: "e-4", name: "Pulley frente aberto", technique: "2 segundos de pico", sets: [{ label: "Aquecimento", detail: "1-2 x 10 a 15 (Intervalo 1 min)" }, { label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "3 x 8 a 12 (Intervalo 2 min)" }] },
-          { id: "e-5", name: "Pulley frente triângulo", technique: "2 pico + 1 drop", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "3 x 8 a 12 (Intervalo 2 min)" }] },
-          { id: "e-6", name: "Serrote", technique: "2 segundos de pico", sets: [{ label: "Ajuste", detail: "1-2 x 4 a 6 (Intervalo 1 a 2 min)" }, { label: "Trabalho", detail: "2 x 6 a 10 (Intervalo 2 min)" }] },
-          { id: "e-7", name: "Abdominal infra na torre", technique: "2 segundos de pico", sets: [{ label: "Trabalho", detail: "3 x RM (Intervalo 1 min entre séries)" }] },
-          { id: "e-8", name: "Abdominal supra na prancha declinada", sets: [{ label: "Trabalho", detail: "3 x RM (Intervalo 1 min entre séries)" }] }
+        id: 'treino-e', title: 'Treino E', sub: 'Bíceps, Costas e Abdômen',
+        alert: 'Mobilidade de ombros + alongamento do peito',
+        ex: [
+          { id: 'e1', n: 'Rosca Direta Cabo', t: '2s pico', s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
+          { id: 'e2', n: 'Rosca Scott Máquina ou no Cabo', t: '2s pico + 2 rest-pause', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 8–12 (2 min)' }] },
+          { id: 'e3', n: 'Rosca Direta Corda', t: '1 drop set', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 10–15 (1 min)' }] },
+          { id: 'e4', n: 'Pulley Frente Aberto', t: '2s pico', s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 8–12 (2 min)' }] },
+          { id: 'e5', n: 'Pulley Frente Triângulo', t: '2s pico + 1 drop', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 8–12 (2 min)' }] },
+          { id: 'e6', n: 'Serrote', t: '2s pico', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2 min)' }] },
+          { id: 'e7', n: 'Abdominal Infra na Torre', t: '2s pico', s: [{ l: 'Trabalho', d: '3 × RM (1 min)' }] },
+          { id: 'e8', n: 'Abdominal Supra na Prancha Declinada', t: null, s: [{ l: 'Trabalho', d: '3 × RM (1 min)' }] }
         ]
       }
     ];
 
-    let activeTabId = tabsData[0].id;
-    let state = loadState();
-    const tabsRoot = document.getElementById("tabs");
-    const contentRoot = document.getElementById("content");
-    let modalCallback = null;
+    /* ============================================ STATE ============================================ */
+    const $t = document.getElementById('tabs'), $m = document.getElementById('content'), $md = document.getElementById('modal');
+    let act = 'semana', st = ld(), mCb = null;
 
-    const modalOverlay = document.getElementById("modalConfirm");
-    const modalMessage = document.getElementById("modalMessage");
-    const modalCancel = document.getElementById("modalCancel");
-    const modalConfirmBtn = document.getElementById("modalConfirmBtn");
+    document.getElementById('mNo').onclick = () => { $md.classList.remove('open'); mCb = null };
+    document.getElementById('mYes').onclick = () => { $md.classList.remove('open'); if (mCb) { mCb(); mCb = null } };
+    $md.onclick = e => { if (e.target === $md) { $md.classList.remove('open'); mCb = null } };
+    function ask(msg, cb) { document.getElementById('mMsg').textContent = msg; mCb = cb; $md.classList.add('open') }
 
-    function showModal(message, onConfirm) {
-      modalMessage.textContent = message;
-      modalCallback = onConfirm;
-      modalOverlay.classList.add("active");
+    function ld() { try { return JSON.parse(localStorage.getItem(SK)) || {} } catch { return {} } }
+    function sv() { try { localStorage.setItem(SK, JSON.stringify(st)) } catch { } }
+    function k(a, b, c) { return a + '|' + b + '|' + c }
+    function gc(a, b, c) { return !!st[k(a, b, c)] }
+    function sc(a, b, c, v) { st[k(a, b, c)] = v }
+    function ed(tid, eid, len) { for (let i = 0; i < len; i++)if (!gc(tid, eid, i)) return false; return len > 0 }
+    function wd(tid) { return !!st[tid + '_d'] }
+    function swd(tid, v) { st[tid + '_d'] = v }
+
+    function tags(t) {
+      if (!t) return [];
+      const r = [], lo = t.toLowerCase();
+      if (lo.includes('rest')) { const m = t.match(/(\d+)\s*rest/i); r.push({ txt: (m ? m[1] + ' ' : '') + 'Rest-Pause', cls: 'tag-rest' }) }
+      if (lo.includes('drop')) { const m = t.match(/(\d+)\s*drop/i); r.push({ txt: (m ? m[1] + ' ' : '') + 'Drop Set', cls: 'tag-drop' }) }
+      if (lo.includes('pico')) { const m = t.match(/(\d+)s/i); r.push({ txt: (m ? m[1] + 's ' : '') + 'Pico', cls: 'tag-pico' }) }
+      return r;
     }
 
-    modalCancel.onclick = () => {
-      modalOverlay.classList.remove("active");
-      modalCallback = null;
-    };
-
-    modalConfirmBtn.onclick = () => {
-      modalOverlay.classList.remove("active");
-      if (modalCallback) {
-        modalCallback();
-        modalCallback = null;
-      }
-    };
-
-    modalOverlay.onclick = (e) => {
-      if (e.target === modalOverlay) {
-        modalOverlay.classList.remove("active");
-        modalCallback = null;
-      }
-    };
-
-    function calculateProgress() {
-      let total = 0, completed = 0;
-      tabsData.forEach(tab => {
-        if (tab.type === "week") return;
-        tab.exercises.forEach(ex => {
-          ex.sets.forEach((_, i) => {
-            total++;
-            if (isChecked(tab.id, ex.id, i)) completed++;
-          });
-        });
+    function prog() {
+      let t = 0, d = 0, exd = 0;
+      D.forEach(tab => {
+        if (!tab.ex) return; tab.ex.forEach(e => {
+          e.s.forEach((_, i) => { t++; if (gc(tab.id, e.id, i)) d++ });
+          if (ed(tab.id, e.id, e.s.length)) exd++;
+        })
       });
-      return total > 0 ? Math.round((completed / total) * 100) : 0;
+      return { pct: t > 0 ? Math.round(d / t * 100) : 0, exd };
+    }
+    function uprog() {
+      const { pct, exd } = prog();
+      const f = document.getElementById('pFill'), t = document.getElementById('pText'), s = document.getElementById('sDone');
+      if (f) f.style.width = pct + '%'; if (t) t.textContent = pct + '%'; if (s) s.textContent = exd;
+    }
+    function wid(plan) {
+      const p = plan.toLowerCase();
+      if (p.includes('treino a')) return 'treino-a'; if (p.includes('treino b')) return 'treino-b';
+      if (p.includes('treino c')) return 'treino-c'; if (p.includes('treino d')) return 'treino-d';
+      if (p.includes('treino e')) return 'treino-e'; return null;
     }
 
-    function updateProgress() {
-      const percent = calculateProgress();
-      const fill = document.getElementById("progressFill");
-      const text = document.getElementById("progressText");
-      if (fill) fill.style.width = percent + "%";
-      if (text) text.textContent = "Progresso: " + percent + "%";
-    }
-
-    renderTabs();
-    renderContent();
-    updateProgress();
-
-    function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } }
-    function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { } }
-    function k(tabId, exId, setIdx) { return `${tabId}__${exId}__${setIdx}`; }
-    function isChecked(tabId, exId, setIdx) { return !!state[k(tabId, exId, setIdx)]; }
-    function setChecked(tabId, exId, setIdx, val) { state[k(tabId, exId, setIdx)] = val; }
-    function isExComplete(tabId, exId, cnt) {
-      if (cnt === 0) return false;
-      for (let i = 0; i < cnt; i++) if (!isChecked(tabId, exId, i)) return false;
-      return true;
-    }
-
-    function isWorkoutComplete(tabId, exerciseCount) {
-      for (let i = 0; i < exerciseCount; i++) {
-        const ex = tabsData.find(t => t.id === tabId).exercises[i];
-        if (!isExComplete(tabId, ex.id, ex.sets.length)) return false;
-      }
-      return exerciseCount > 0;
-    }
-
-    function setWorkoutComplete(tabId, complete) {
-      state[tabId + "__workout_complete"] = complete;
-    }
-
-    function getWorkoutComplete(tabId) {
-      return !!state[tabId + "__workout_complete"];
-    }
-
-    function resetAllProgress() {
-      showModal("Tem certeza que deseja zerar TODO o progresso? Esta ação não pode ser desfeita.", () => {
-        state = {};
-        saveState();
-        renderContent();
-        updateProgress();
-      });
-    }
-    function getTags(tech) {
-      const t = [];
-      if (!tech) return t;
-      const l = tech.toLowerCase();
-
-      if (l.includes("rest pause")) {
-        const match = tech.match(/(\d+)\s*rest pause/i);
-        t.push({ txt: match ? match[1] + " Rest Pause" : "Rest Pause", cls: "tag-rest" });
-      }
-
-      if (l.includes("drop")) {
-        const match = tech.match(/(\d+)\s*drop/i);
-        t.push({ txt: match ? match[1] + " Drop" : "Drop Set", cls: "tag-drop" });
-      }
-
-      if (l.includes("pico")) {
-        const secMatch = tech.match(/(\d+)\s*segundos?/i);
-        if (secMatch) {
-          t.push({ txt: secMatch[1] + "s Pico", cls: "tag-pico" });
-        } else {
-          const cntMatch = tech.match(/(\d+)\s*pico/i);
-          t.push({ txt: cntMatch ? cntMatch[1] + " Pico" : "Pico", cls: "tag-pico" });
-        }
-      }
-
-      return t;
-    }
-
+    /* ============================================ RENDER ============================================ */
     function renderTabs() {
-      tabsRoot.innerHTML = "";
-      tabsData.forEach(tab => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = `tab-btn ${tab.id === activeTabId ? 'active' : ''}`;
-        btn.textContent = tab.title;
-        btn.onclick = () => { activeTabId = tab.id; renderTabs(); renderContent(); };
-        tabsRoot.appendChild(btn);
+      $t.innerHTML = '';
+      D.forEach(tab => {
+        const b = document.createElement('button');
+        b.className = 'tab' + (tab.id === act ? ' active' : '');
+        b.textContent = tab.title;
+        b.onclick = () => { act = tab.id; renderTabs(); render() };
+        $t.appendChild(b);
       });
-
-      const resetBtn = document.createElement("button");
-      resetBtn.type = "button";
-      resetBtn.className = "tab-btn reset-all-btn";
-      resetBtn.innerHTML = '<i class="ph-fill ph-trash"></i>';
-      resetBtn.title = "Zerar Todo Progresso";
-      resetBtn.onclick = () => resetAllProgress();
-      tabsRoot.appendChild(resetBtn);
+      const tr = document.createElement('button');
+      tr.className = 'tab tab-trash';
+      tr.innerHTML = '<i class="ph ph-trash"></i>';
+      tr.title = 'Zerar tudo';
+      tr.onclick = () => ask('Zerar TODO o progresso? Não pode ser desfeito.', () => { st = {}; sv(); render(); uprog() });
+      $t.appendChild(tr);
     }
 
-    function renderContent() {
-      const tab = tabsData.find(t => t.id === activeTabId);
-      if (!tab) { contentRoot.innerHTML = ""; return; }
-      contentRoot.innerHTML = "";
-      const panel = document.createElement("div");
-      panel.className = "glass rounded-xl p-4";
+    function render() {
+      const tab = D.find(t => t.id === act);
+      $m.innerHTML = '';
+      if (!tab) return;
+      tab.type === 'week' ? rWeek(tab) : rWork(tab);
+      uprog();
+    }
 
-      if (tab.type === "week") {
-        const getWorkoutId = (plan) => {
-          const p = plan.toLowerCase();
-          if (p.includes("treino a")) return "treino-a";
-          if (p.includes("treino b")) return "treino-b";
-          if (p.includes("treino c")) return "treino-c";
-          if (p.includes("treino d")) return "treino-d";
-          if (p.includes("treino e")) return "treino-e";
-          return null;
-        };
-        panel.innerHTML = `<h2 class="font-display text-xl font-bold mb-3 text-center">Sugestão da Semana</h2><div class="grid grid-cols-2 sm:grid-cols-4 gap-3">${tab.days.map(d => {
-          const isRest = d.plan.toLowerCase().includes("descanso");
-          let workoutComplete = false;
-          let workoutLabel = '';
-          if (!isRest) {
-            const workoutId = getWorkoutId(d.plan);
-            if (workoutId) {
-              const workout = tabsData.find(t => t.id === workoutId);
-              if (workout && workout.exercises) {
-                workoutComplete = workout.exercises.every(ex => isExComplete(workoutId, ex.id, ex.sets.length));
-              }
-              if (workoutId.includes('a')) workoutLabel = 'A';
-              else if (workoutId.includes('b')) workoutLabel = 'B';
-              else if (workoutId.includes('c')) workoutLabel = 'C';
-              else if (workoutId.includes('d')) workoutLabel = 'D';
-              else if (workoutId.includes('e')) workoutLabel = 'E';
-            }
-          }
-          return `<div class="day-card rounded-xl p-3.5 ${isRest ? 'rest' : ''} ${workoutComplete ? 'completed' : ''}">
-            <div class="flex justify-between items-center mb-2">
-              <div class="text-primary font-bold text-xs">${d.day}</div>
-              ${workoutLabel ? `<span class="workout-label">${workoutLabel}</span>` : ''}
-            </div>
-            <div class="text-gray-300 text-sm font-medium">${d.plan}</div>
-            ${workoutComplete ? '<div class="check-icon mt-2"><i class="ph-fill ph-check text-white text-sm"></i></div>' : ''}
-          </div>`;
-        }).join('')}</div>`;
-      } else {
-        panel.innerHTML = `<h2 class="font-display text-xl font-bold mb-1">${tab.title}</h2><p class="text-gray-400 text-xs mb-3">${tab.subtitle}</p>${tab.alert ? `<div class="alert-box mb-4"><i class="ph-fill ph-warning text-lg"></i><span>${tab.alert}</span></div>` : ''}`;
+    /* ============================================ WEEK ============================================ */
+    function rWeek(tab) {
+      const p = document.createElement('div'); p.className = 'panel';
 
-        const completo = getWorkoutComplete(tab.id);
-        const completeBtn = document.createElement("button");
-        completeBtn.className = `btn-treino-completo ${completo ? 'completo' : ''}`;
-        completeBtn.textContent = completo ? 'Treino Concluído!' : 'Marcar Treino Completo';
-        completeBtn.onclick = () => {
-          const newValue = !getWorkoutComplete(tab.id);
-          if (newValue) {
-            tab.exercises.forEach(ex => {
-              ex.sets.forEach((_, i) => setChecked(tab.id, ex.id, i, true));
-            });
-          } else {
-            tab.exercises.forEach(ex => {
-              ex.sets.forEach((_, i) => setChecked(tab.id, ex.id, i, false));
-            });
-          }
-          setWorkoutComplete(tab.id, newValue);
-          saveState();
+      const hd = document.createElement('div'); hd.className = 'week-head';
+      hd.innerHTML = '<h2 class="week-title">Plano da Semana</h2>';
+      p.appendChild(hd);
 
-          const cards = panel.querySelectorAll('.card-exercise');
-          tab.exercises.forEach((ex, idx) => {
-            if (cards[idx]) {
-              const done = isExComplete(tab.id, ex.id, ex.sets.length);
-              cards[idx].classList.toggle('completed', done);
-              const btnConcluir = cards[idx].querySelector('.btn-concluir');
-              if (btnConcluir) {
-                btnConcluir.classList.toggle('concluido', done);
-                btnConcluir.textContent = done ? 'Concluído' : 'Concluir';
-              }
-              cards[idx].querySelectorAll('.checkbox-custom').forEach(cb => cb.checked = done);
-            }
-          });
+      const g = document.createElement('div'); g.className = 'week-grid';
 
-          completeBtn.classList.toggle('completo', newValue);
-          completeBtn.textContent = newValue ? 'Treino Concluído!' : 'Marcar Treino Completo';
-          updateProgress();
-          updateWeekView();
-        };
-        panel.appendChild(completeBtn);
+      tab.days.forEach(d => {
+        const rest = d.plan.toLowerCase().includes('descanso');
+        const wi = wid(d.plan);
+        let isDone = false;
+        if (wi) { const w = D.find(t => t.id === wi); if (w && w.ex) isDone = w.ex.every(e => ed(wi, e.id, e.s.length)) }
 
-        const checkAllComplete = () => {
-          return tab.exercises.every(ex => isExComplete(tab.id, ex.id, ex.sets.length));
-        };
+        const card = document.createElement('div');
+        card.className = 'day-card' + (rest ? ' rest' : '') + (isDone ? ' done' : '');
 
-        tab.exercises.forEach((ex) => {
-          const card = buildCard(tab.id, ex, checkAllComplete, completeBtn);
-          panel.appendChild(card);
-        });
+        const badge = wi && !rest ? `<span class="day-badge">${d.plan.split(' ')[1]}</span>` : '';
+        const iconCls = dayIcons[d.plan] || 'ph-fill ph-dumbbell';
+        const iconContent = isDone ? '✓' : `<i class="${iconCls}"></i>`;
 
-        const exercisesList = panel.querySelectorAll('.card-exercise');
-        const resetArea = document.createElement("div");
-        resetArea.className = "flex justify-center mt-5";
-        const btn = document.createElement("button");
-        btn.className = "btn-zerar";
-        btn.textContent = "Zerar Treino";
-        btn.onclick = () => {
-          showModal("Tem certeza que deseja zerar todo o progresso deste treino?", () => {
-            resetDay(tab.id, tab.exercises);
-            setWorkoutComplete(tab.id, false);
-            saveState();
-            exercisesList.forEach(card => {
-              card.classList.remove('completed');
-              const btnConcluir = card.querySelector('.btn-concluir');
-              if (btnConcluir) {
-                btnConcluir.classList.remove('concluido');
-                btnConcluir.textContent = 'Concluir';
-              }
-              const checkboxes = card.querySelectorAll('.checkbox-custom');
-              checkboxes.forEach(cb => cb.checked = false);
-            });
-            completeBtn.classList.remove('completo');
-            completeBtn.textContent = 'Marcar Treino Completo';
-            updateProgress();
-            updateWeekView();
-          });
-        };
-        resetArea.appendChild(btn);
-        panel.appendChild(resetArea);
+        card.innerHTML = `
+      <div class="day-top">
+        <span class="day-label">${d.d}</span>
+        ${badge}
+      </div>
+      <div class="day-plan">${d.plan}</div>
+      <div class="day-sub">${d.sub}</div>
+      <div class="day-icon">${iconContent}</div>
+    `;
+        g.appendChild(card);
+      });
+      p.appendChild(g);
+
+      /* Legend */
+      const lg = document.createElement('div'); lg.className = 'legend';
+      lg.innerHTML = `
+    <p class="legend-t">Técnicas Aplicadas</p>
+    <div class="legend-list">
+      <div class="legend-item"><span class="legend-dot lr"></span><strong>Rest-Pause</strong>10s de pausa na falha muscular</div>
+      <div class="legend-item"><span class="legend-dot lp"></span><strong>Drop Set</strong>Redução de carga sem descanso</div>
+      <div class="legend-item"><span class="legend-dot lc"></span><strong>Pico</strong>2s de squeeze na máxima tensão</div>
+    </div>
+  `;
+      p.appendChild(lg);
+      $m.appendChild(p);
+    }
+
+    /* ============================================ WORKOUT ============================================ */
+    function rWork(tab) {
+      const p = document.createElement('div'); p.className = 'panel';
+
+      const hd = document.createElement('div'); hd.className = 'wo-head';
+      const ttl = document.createElement('h2'); ttl.className = 'wo-title';
+      ttl.innerHTML = tab.title + ` <span style="color:var(--text-3);font-weight:500;font-size:.85rem">· ${tab.sub}</span>`;
+      hd.appendChild(ttl);
+
+      if (tab.alert) {
+        const al = document.createElement('div'); al.className = 'alert';
+        al.innerHTML = `<i class="ph-fill ph-lightning"></i><span>${tab.alert}</span>`;
+        hd.appendChild(al);
       }
-      contentRoot.appendChild(panel);
+
+      const isDone = wd(tab.id);
+      const cBtn = document.createElement('button'); cBtn.className = 'btn-complete' + (isDone ? ' done' : '');
+      cBtn.innerHTML = isDone ? '<i class="ph-fill ph-check-circle"></i> Treino concluído!' : '<i class="ph ph-check-circle"></i> Marcar como concluído';
+      cBtn.onclick = () => {
+        const v = !wd(tab.id);
+        tab.ex.forEach(e => e.s.forEach((_, i) => sc(tab.id, e.id, i, v)));
+        swd(tab.id, v); sv(); render();
+      };
+      hd.appendChild(cBtn);
+      p.appendChild(hd);
+
+      const list = document.createElement('div'); list.className = 'ex-list';
+      tab.ex.forEach((e, idx) => list.appendChild(buildCard(tab, e, idx + 1, cBtn)));
+      p.appendChild(list);
+
+      const rw = document.createElement('div'); rw.className = 'reset-wrap';
+      const rb = document.createElement('button'); rb.className = 'btn-reset';
+      rb.innerHTML = '<i class="ph ph-arrow-counter-clockwise"></i> Zerar treino';
+      rb.onclick = () => ask('Zerar o progresso deste treino?', () => {
+        tab.ex.forEach(e => e.s.forEach((_, i) => sc(tab.id, e.id, i, false)));
+        swd(tab.id, false); sv(); render();
+      });
+      rw.appendChild(rb); p.appendChild(rw);
+      $m.appendChild(p);
     }
 
-    function buildCard(tabId, ex, checkAllComplete, completeBtn) {
-      const card = document.createElement("div");
-      card.className = "card-exercise rounded-xl p-3.5 mb-2.5";
-      const done = isExComplete(tabId, ex.id, ex.sets.length);
-      if (done) card.classList.add("completed");
+    /* ============================================ CARD ============================================ */
+    function buildCard(tab, e, num, cBtn) {
+      let doneCount = 0;
+      e.s.forEach((_, i) => { if (gc(tab.id, e.id, i)) doneCount++; });
+      const done = doneCount === e.s.length && e.s.length > 0;
+      const partial = doneCount > 0 && !done;
 
-      const tags = getTags(ex.technique);
-      const tagsHtml = tags.length ? `<div class="flex gap-1.5 mt-1.5">${tags.map(tag => `<span class="tag ${tag.cls}">${tag.txt}</span>`).join('')}</div>` : '';
+      const card = document.createElement('div');
+      card.className = 'ex-card' + (done ? ' done' : (partial ? ' partial' : ''));
 
-      const btnConcluir = document.createElement("button");
-      btnConcluir.type = "button";
-      btnConcluir.className = `btn-concluir ${done ? 'concluido' : ''}`;
-      btnConcluir.textContent = done ? 'Concluído' : 'Concluir';
-      btnConcluir.onclick = () => {
-        const isNowComplete = !done;
-        ex.sets.forEach((_, i) => setChecked(tabId, ex.id, i, isNowComplete));
-        saveState();
+      const tgs = tags(e.t);
+      const tgsH = tgs.length ? `<div class="tags">${tgs.map(t => `<span class="tag ${t.cls}">${t.txt}</span>`).join('')}</div>` : '';
 
-        const checkboxes = card.querySelectorAll('.checkbox-custom');
-        checkboxes.forEach(cb => cb.checked = isNowComplete);
-
-        btnConcluir.className = `btn-concluir ${isNowComplete ? 'concluido' : ''}`;
-        btnConcluir.textContent = isNowComplete ? 'Concluído' : 'Concluir';
-        card.classList.toggle('completed', isNowComplete);
-
-        if (checkAllComplete && completeBtn) {
-          const allDone = checkAllComplete();
-          const wasAlreadyComplete = getWorkoutComplete(tabId);
-          if (allDone && !wasAlreadyComplete) {
-            setWorkoutComplete(tabId, true);
-            completeBtn.classList.add('completo');
-            completeBtn.textContent = 'Treino Concluído!';
-          } else if (!allDone && wasAlreadyComplete) {
-            setWorkoutComplete(tabId, false);
-            completeBtn.classList.remove('completo');
-            completeBtn.textContent = 'Marcar Treino Completo';
-          }
-          saveState();
-        }
-
-        updateProgress();
-        updateWeekView();
+      const db = document.createElement('button'); db.className = 'btn-done' + (done ? ' on' : '');
+      db.textContent = done ? '✓ Feito' : 'Concluir';
+      db.onclick = () => {
+        const now = !ed(tab.id, e.id, e.s.length);
+        e.s.forEach((_, i) => sc(tab.id, e.id, i, now)); sv();
+        card.querySelectorAll('.cb').forEach(c => { c.checked = now });
+        card.classList.remove('done', 'partial');
+        if (now) card.classList.add('done');
+        db.className = 'btn-done' + (now ? ' on' : '');
+        db.textContent = now ? '✓ Feito' : 'Concluir';
+        syncWk(tab, cBtn); uprog();
       };
 
-      card.innerHTML = `<div class="flex justify-between items-start gap-2 mb-2"><div class="flex-1"><h3 class="font-semibold text-sm text-white">${ex.name}</h3>${tagsHtml}</div></div>`;
-      card.querySelector(".flex").appendChild(btnConcluir);
+      const top = document.createElement('div'); top.className = 'ex-top';
+      const info = document.createElement('div'); info.className = 'ex-info';
+      info.innerHTML = `<div class="ex-num">Exercício ${String(num).padStart(2, '0')}</div><div class="ex-name">${e.n}</div>${tgsH}`;
+      top.appendChild(info); top.appendChild(db); card.appendChild(top);
 
-      if (!ex.sets.length) return card;
+      const sw = document.createElement('div'); sw.className = 'sets';
+      e.s.forEach((s, i) => {
+        const row = document.createElement('div'); row.className = 'set-row';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'cb';
+        cb.checked = gc(tab.id, e.id, i); cb.setAttribute('aria-label', s.l);
+        cb.onchange = () => {
+          sc(tab.id, e.id, i, cb.checked); sv();
+          const cbs = Array.from(card.querySelectorAll('.cb'));
+          const count = cbs.filter(c => c.checked).length;
+          const all = count === cbs.length;
+          const isPartial = count > 0 && !all;
 
-      const list = document.createElement("div");
-      list.className = "space-y-1.5";
-      ex.sets.forEach((set, i) => {
-        const row = document.createElement("div");
-        row.className = "set-row";
-        const chk = document.createElement("input");
-        chk.type = "checkbox";
-        chk.className = "checkbox-custom";
-        chk.checked = isChecked(tabId, ex.id, i);
-        chk.onchange = () => {
-          setChecked(tabId, ex.id, i, chk.checked);
-          saveState();
-          updateProgress();
-          if (tabId === activeTabId) {
-            const btn = card.querySelector('.btn-concluir');
-            if (btn) {
-              const allChecked = Array.from(card.querySelectorAll('.checkbox-custom')).every(c => c.checked);
-              btn.classList.toggle('concluido', allChecked);
-              btn.textContent = allChecked ? 'Concluído' : 'Concluir';
-              card.classList.toggle('completed', allChecked);
-            }
-          }
-          updateWeekView();
+          card.classList.toggle('done', all);
+          card.classList.toggle('partial', isPartial);
+
+          db.className = 'btn-done' + (all ? ' on' : '');
+          db.textContent = all ? '✓ Feito' : 'Concluir';
+          syncWk(tab, cBtn); uprog();
         };
-        row.innerHTML = `<span class="set-label">${set.label}</span><span class="text-gray-300 text-xs">${set.detail}</span>`;
-        row.prepend(chk);
-        list.appendChild(row);
+        const lbl = document.createElement('span'); lbl.className = 'set-lbl'; lbl.textContent = s.l;
+        const det = document.createElement('span'); det.className = 'set-detail'; det.textContent = s.d;
+        row.appendChild(cb); row.appendChild(lbl); row.appendChild(det); sw.appendChild(row);
       });
-      card.appendChild(list);
-      return card;
+      card.appendChild(sw); return card;
     }
 
-    function resetDay(tabId, exercises) {
-      exercises.forEach(ex => ex.sets.forEach((_, i) => delete state[k(tabId, ex.id, i)]));
-      saveState();
+    function syncWk(tab, btn) {
+      if (!btn) return;
+      const all = tab.ex.every(e => ed(tab.id, e.id, e.s.length));
+      const was = wd(tab.id);
+      if (all && !was) { swd(tab.id, true); btn.classList.add('done'); btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Treino concluído!'; sv() }
+      if (!all && was) { swd(tab.id, false); btn.classList.remove('done'); btn.innerHTML = '<i class="ph ph-check-circle"></i> Marcar como concluído'; sv() }
     }
 
-    function updateWeekView() {
-      if (activeTabId !== "semana") return;
-      const weekPanel = contentRoot.querySelector('.glass');
-      if (!weekPanel) return;
-      const tab = tabsData.find(t => t.id === "semana");
-      const getWorkoutId = (plan) => {
-        const p = plan.toLowerCase();
-        if (p.includes("treino a")) return "treino-a";
-        if (p.includes("treino b")) return "treino-b";
-        if (p.includes("treino c")) return "treino-c";
-        if (p.includes("treino d")) return "treino-d";
-        if (p.includes("treino e")) return "treino-e";
-        return null;
-      };
-      const cards = weekPanel.querySelectorAll('.day-card');
-      tab.days.forEach((d, idx) => {
-        if (cards[idx]) {
-          const isRest = d.plan.toLowerCase().includes("descanso");
-          if (!isRest) {
-            const workoutId = getWorkoutId(d.plan);
-            if (workoutId) {
-              const workout = tabsData.find(t => t.id === workoutId);
-              const workoutComplete = workout && workout.exercises && workout.exercises.every(ex => isExComplete(workoutId, ex.id, ex.sets.length));
-              cards[idx].classList.toggle('completed', workoutComplete);
-              const existingCheck = cards[idx].querySelector('.check-icon');
-              if (workoutComplete && !existingCheck) {
-                const checkDiv = document.createElement('div');
-                checkDiv.className = 'check-icon mt-2';
-                checkDiv.innerHTML = '<i class="ph-fill ph-check text-white text-sm"></i>';
-                cards[idx].appendChild(checkDiv);
-              } else if (!workoutComplete && existingCheck) {
-                existingCheck.remove();
-              }
-            }
-          }
-        }
-      });
-    }
+    renderTabs(); render(); uprog();
   </script>
 </body>
 
