@@ -4,7 +4,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const PORT = process.env.PORT || 3000;
-const ROOT = process.cwd(); // Usa o diretório onde você rodou o comando
+const ROOT = __dirname; // Usa o diretório do projeto, independente do cwd
 
 // ====== MIME TYPES ======
 const MIME_TYPES = {

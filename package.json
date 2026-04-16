@@ -1,9 +1,14 @@
 {
-  "name": "aronluz-website",
+  "name": "gym-workout-app",
+  "version": "1.0.0",
+  "description": "Aplicação web de treino com servidor Node.js",
+  "main": "server.js",
   "private": true,
   "scripts": {
-    "build:css": "tailwindcss -i src/input.css -o style.css --minify",
-    "watch:css": "tailwindcss -i src/input.css -o style.css --watch"
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.17"
