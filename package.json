@@ -1,5 +1,5 @@
 {
-  "name": "gym",
+  "name": "gym-workout-app",
   "version": "1.0.0",
   "description": "Aplicação web de treino com servidor Node.js",
   "main": "server.js",
