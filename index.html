@@ -240,7 +240,7 @@
     const D2 = [
       {
         id: 'semana', title: 'Semana', type: 'week', days: [
-          { d: 'Seg', plan: 'Treino A', sub: 'Pernas + Cardio' },
+          { d: 'Seg', plan: 'Treino A', sub: 'Pernas (Força)' },
           { d: 'Ter', plan: 'Treino B', sub: 'Peito + Tríceps' },
           { d: 'Qua', plan: 'Treino C', sub: 'Costas + Bíceps' },
           { d: 'Qui', plan: 'Treino D', sub: 'Pernas (Glúteo)' },
@@ -250,65 +250,71 @@
         ]
       },
       {
-        id: 'treino-a', title: 'Treino A', sub: 'Pernas (Pesado) + Cardio',
-        alert: 'Mounjaro: Pode gerar fraqueza; coma proteína leve antes.',
+        id: 'treino-a', title: 'Treino A', sub: 'Pernas (Força)',
+        alert: 'Mounjaro: Evite treino pesado em jejum, ajuste a intensidade se houver fraqueza.',
         ex: [
-          { id: 'a1', n: 'Agachamento', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 8–10 (30-60s)' }] },
-          { id: 'a2', n: 'Leg press', t: null, s: [{ l: 'Trabalho', d: '4 × 10 (30-60s)' }] },
-          { id: 'a3', n: 'Cadeira extensora', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'a4', n: 'Mesa flexora', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'a5', n: 'Panturrilha', t: null, s: [{ l: 'Trabalho', d: '4 × 15 (30-60s)' }] },
-          { id: 'a6', n: 'Cardio', t: 'Esteira inclinada', s: [{ l: 'Fim de Treino', d: '1 × 20 min' }] }
+          { id: 'a1', n: 'Agachamento livre (barra nas costas)', t: 'Descida 3s / Subida explosiva. Quase falha no final', s: [{ l: 'Trabalho', d: '4 × 6–8' }] },
+          { id: 'a2', n: 'Leg press 45°', t: 'Descer 2-3s. Empurrar com calcanhar', s: [{ l: 'Trabalho', d: '4 × 10' }] },
+          { id: 'a3', n: 'Cadeira extensora (máquina)', t: '1-2s pico + 1 drop set na última', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'a4', n: 'Mesa flexora (deitado)', t: '1s pico de contração', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'a5', n: 'Panturrilha em pé (máquina)', t: '2s pico. Descida lenta', s: [{ l: 'Trabalho', d: '4 × 15' }] },
+          { id: 'a6', n: 'Cardio: Esteira inclinada (6–10%)', t: 'Ritmo constante', s: [{ l: 'Fim de Treino', d: '1 × 20–25 min' }] }
         ]
       },
       {
-        id: 'treino-b', title: 'Treino B', sub: 'Peito + Tríceps + HIIT',
-        alert: 'Mounjaro: Respeite limites, não treine pesado em jejum.',
+        id: 'treino-b', title: 'Treino B', sub: 'Peito + Tríceps',
+        alert: 'Mounjaro: Consuma proteína leve antes e priorize hidratação.',
         ex: [
-          { id: 'b1', n: 'Supino reto', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 8 (30-60s)' }] },
-          { id: 'b2', n: 'Supino inclinado', t: null, s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
-          { id: 'b3', n: 'Crucifixo', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'b4', n: 'Tríceps pulley', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'b5', n: 'Tríceps banco', t: null, s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
-          { id: 'b6', n: 'HIIT', t: 'Corrida leve + sprint', s: [{ l: 'Fim de Treino', d: '1 × 15 min' }] }
+          { id: 'b1', n: 'Supino reto (barra)', t: 'Controle total do movimento', s: [{ l: 'Trabalho', d: '4 × 6–8' }] },
+          { id: 'b2', n: 'Supino inclinado (halter 30-45°)', t: 'Foco em alongamento e contração', s: [{ l: 'Trabalho', d: '3 × 8–10' }] },
+          { id: 'b3', n: 'Crucifixo (halter ou máquina)', t: '1s pico no fechamento', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'b4', n: 'Tríceps pulley (corda)', t: '1s pico. Abrir corda no final', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'b5', n: 'Tríceps banco (peso corporal)', t: 'Descer até 90° no cotovelo', s: [{ l: 'Trabalho', d: '3 × 10' }] },
+          { id: 'b6', n: 'Tríceps testa (barra ou halter)', t: 'Cotovelos fixos', s: [{ l: 'Trabalho', d: '3 × 10' }] },
+          { id: 'b7', n: 'HIIT', t: '30s forte / 1min leve', s: [{ l: 'Fim de Treino', d: '1 × 15 min' }] }
         ]
       },
       {
         id: 'treino-c', title: 'Treino C', sub: 'Costas + Bíceps',
-        alert: 'Mounjaro: Evite esforço excessivo em jejum absoluto.',
+        alert: 'Mounjaro: Ajuste a intensidade se houver fraqueza.',
         ex: [
-          { id: 'c1', n: 'Puxada na frente', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 10 (30-60s)' }] },
-          { id: 'c2', n: 'Remada curvada', t: null, s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
-          { id: 'c3', n: 'Remada baixa', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'c4', n: 'Rosca direta', t: null, s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
-          { id: 'c5', n: 'Rosca alternada', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'c6', n: 'Caminhada Rápida', t: 'Ritmo constante', s: [{ l: 'Fim de Treino', d: '1 × 20 min' }] }
+          { id: 'c1', n: 'Puxada na frente (pulley barra)', t: 'Puxar até o peito. Contrair costas', s: [{ l: 'Trabalho', d: '4 × 10' }] },
+          { id: 'c2', n: 'Remada curvada (barra)', t: 'Puxar até o abdômen', s: [{ l: 'Trabalho', d: '3 × 8–10' }] },
+          { id: 'c3', n: 'Remada baixa (máquina)', t: '1s pico na contração', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'c4', n: 'Pulldown (barra aberta)', t: 'Movimento controlado', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'c5', n: 'Rosca direta (barra)', t: 'Subida controlada / Descida lenta', s: [{ l: 'Trabalho', d: '3 × 10' }] },
+          { id: 'c6', n: 'Rosca alternada (halter)', t: 'Sem balançar o corpo', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'c7', n: 'Rosca martelo (halter)', t: 'Foco no antebraço', s: [{ l: 'Trabalho', d: '2 × 12' }] },
+          { id: 'c8', n: 'Cardio: Caminhada rápida', t: 'Ritmo constante', s: [{ l: 'Fim de Treino', d: '1 × 20 min' }] }
         ]
       },
       {
-        id: 'treino-d', title: 'Treino D', sub: 'Pernas (Ênfase Glúteo)',
-        alert: 'Mounjaro: Pode gerar enjoo. Alimentação leve recomendada antes.',
+        id: 'treino-d', title: 'Treino D', sub: 'Pernas (Glúteo)',
+        alert: 'Mounjaro: Consuma proteína leve antes do treino.',
         ex: [
-          { id: 'd1', n: 'Levantamento terra', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 8 (30-60s)' }] },
-          { id: 'd2', n: 'Afundo (com halter)', t: 'Cada perna', s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
-          { id: 'd3', n: 'Cadeira abdutora', t: null, s: [{ l: 'Trabalho', d: '3 × 15 (30-60s)' }] },
-          { id: 'd4', n: 'Glúteo no cabo', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'd5', n: 'Panturrilha', t: null, s: [{ l: 'Trabalho', d: '4 × 15 (30-60s)' }] },
-          { id: 'd6', n: 'Cardio', t: 'Escada ou Bike', s: [{ l: 'Fim de Treino', d: '1 × 15-20 min' }] }
+          { id: 'd1', n: 'Levantamento terra (barra)', t: 'Subir contraindo glúteo', s: [{ l: 'Trabalho', d: '4 × 6–8' }] },
+          { id: 'd2', n: 'Afundo (halter)', t: 'Passo longo (ênfase glúteo)', s: [{ l: 'Trabalho', d: '3 × 10 (cada)' }] },
+          { id: 'd3', n: 'Hip thrust (barra ou máq.)', t: '2s pico máximo', s: [{ l: 'Trabalho', d: '4 × 10' }] },
+          { id: 'd4', n: 'Cadeira abdutora (máquina)', t: '1-2s pico aberto', s: [{ l: 'Trabalho', d: '3 × 15' }] },
+          { id: 'd5', n: 'Glúteo no cabo', t: 'Lento e controlado', s: [{ l: 'Trabalho', d: '3 × 12 (cada)' }] },
+          { id: 'd6', n: 'Panturrilha sentado', t: '2s pico no topo', s: [{ l: 'Trabalho', d: '4 × 15' }] },
+          { id: 'd7', n: 'Cardio: Escada ou bike', t: 'Ritmo constante', s: [{ l: 'Fim de Treino', d: '1 × 15–20 min' }] }
         ]
       },
       {
-        id: 'treino-e', title: 'Treino E', sub: 'Ombro + Cardio + Abdômen',
-        alert: 'Mounjaro: Respeite seus limites durante o cardio.',
+        id: 'treino-e', title: 'Treino E', sub: 'Ombro + Abdômen',
+        alert: 'Mounjaro: Priorize a hidratação e respeite limites.',
         ex: [
-          { id: 'e1', n: 'Desenvolvimento c/ halter', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 10 (30-60s)' }] },
-          { id: 'e2', n: 'Elevação lateral', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'e3', n: 'Elevação frontal', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'e4', n: 'Encolhimento', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'e5', n: 'Prancha', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 30-60s' }] },
-          { id: 'e6', n: 'Abdominal crunch', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 15 (30-60s)' }] },
-          { id: 'e7', n: 'Elevação de pernas', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
-          { id: 'e8', n: 'Cardio Leve', t: 'Recuperação', s: [{ l: 'Fim de Treino', d: '1 × 20 min' }] }
+          { id: 'e1', n: 'Desenvolvimento c/ halter', t: 'Subida controlada', s: [{ l: 'Trabalho', d: '4 × 8–10' }] },
+          { id: 'e2', n: 'Elevação lateral (halter)', t: 'Subir até ombro + 1 drop set na última', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'e3', n: 'Elevação frontal (halter ou anilha)', t: 'Movimento controlado', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'e4', n: 'Encolhimento (halter)', t: '1s pico no topo', s: [{ l: 'Trabalho', d: '3 × 12–15' }] },
+          { id: 'e5', n: 'Face pull (corda pulley)', t: 'Foco em postura', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'e6', n: 'Prancha', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 40-60s' }] },
+          { id: 'e7', n: 'Crunch', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 15' }] },
+          { id: 'e8', n: 'Elevação de pernas', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 12' }] },
+          { id: 'e9', n: 'Abdominal infra banco', t: 'Abdômen', s: [{ l: 'Trabalho', d: '2 × 15' }] },
+          { id: 'e10', n: 'Cardio Leve', t: 'Recuperação', s: [{ l: 'Fim de Treino', d: '1 × 20–25 min' }] }
         ]
       }
     ];
@@ -451,22 +457,16 @@
       } else if (currentProfile === 2) {
         const lg = document.createElement('div'); lg.className = 'legend';
         lg.innerHTML = `
-      <p class="legend-t" style="color: var(--orange)">Intensidade & Diretrizes</p>
+      <p class="legend-t" style="color: var(--orange)">Padrão de Execução</p>
       <div class="legend-list" style="margin-bottom: 18px;">
-        <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Ativação</strong>Descanso de 30–60s e esforço até a quase falha na última série.</div>
-        <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Evolução</strong>Progressão gradual das cargas a cada semana.</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Descanso</strong>30–60s (até 90s em ex. pesados)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Controle e Progressão</strong>Execução controlada (principalmente na descida). Última série próxima da falha. Progressão de carga semanal.</div>
       </div>
 
-      <p class="legend-t" style="color: var(--red)">Precauções com Mounjaro</p>
-      <div class="legend-list" style="margin-bottom: 18px;">
-        <div class="legend-item"><span class="legend-dot lr"></span><strong>Alerta</strong>Possibilidade de fraqueza térmica ou enjoo.</div>
-        <div class="legend-item"><span class="legend-dot lr"></span><strong>Protocolo</strong>Não treine com peso em jejum absoluto. Ingira uma proteína leve antes e priorize a adaptação do seu corpo.</div>
-      </div>
-
-      <p class="legend-t" style="color: var(--green)">Projeção de Resultados</p>
+      <p class="legend-t" style="color: var(--red)">Observações Mounjaro</p>
       <div class="legend-list">
-        <div class="legend-item"><span class="legend-dot" style="background:var(--green); box-shadow:0 0 6px var(--green-glow)"></span><strong>Metas</strong>Perda de peso consistente e sustentável (2 a 5 kg por mês).</div>
-        <div class="legend-item"><span class="legend-dot" style="background:var(--green); box-shadow:0 0 6px var(--green-glow)"></span><strong>Impactos</strong>Condicionamento físico ampliado promovendo um corpo rígido e mais firme.</div>
+        <div class="legend-item"><span class="legend-dot lr"></span><strong>Alimentação</strong>Evitar treino pesado em jejum. Consumir proteína leve antes do treino.</div>
+        <div class="legend-item"><span class="legend-dot lr"></span><strong>Atenção</strong>Ajustar intensidade se houver fraqueza e priorizar hidratação.</div>
       </div>
     `;
         p.appendChild(lg);
