@@ -415,7 +415,7 @@
         if (wi) { const w = getD().find(t => t.id === wi); if (w && w.ex) isDone = w.ex.every(e => ed(wi, e.id, e.s.length)) }
 
         const card = document.createElement('div');
-        card.className = 'day-card reveal ' + `stagger-${(idx % 5) + 1}` + (rest ? ' rest' : '') + (isDone ? ' done' : '');
+        card.className = 'day-card reveal ' + `stagger-${(idx % 7) + 1}` + (rest ? ' rest' : '') + (isDone ? ' done' : '');
         if (!rest && wi) {
           card.style.cursor = 'pointer';
           card.onclick = () => {
