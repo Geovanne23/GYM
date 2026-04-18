@@ -22,18 +22,28 @@
 
   <div class="app">
 
+    <!-- PROFILE TABS -->
+    <div class="profile-tabs">
+      <button id="p1Btn" class="p-tab active" onclick="switchProfile(1)">
+        <i class="ph-fill ph-barbell"></i> Perfil 1: Hipertrofia
+      </button>
+      <button id="p2Btn" class="p-tab" onclick="switchProfile(2)">
+        <i class="ph-fill ph-fire"></i> Perfil 2: Emagrecimento
+      </button>
+    </div>
+
     <!-- HEADER -->
     <header class="header">
       <div class="eyebrow">
         <span class="eyebrow-dot"></span>
-        <span class="eyebrow-text">Metodologia Avançada</span>
+        <span class="eyebrow-text" id="hEyebrow">Metodologia Avançada</span>
       </div>
 
-      <h1 class="h-title">
+      <h1 class="h-title" id="hTitle">
         <span class="t-red">Além da</span><br>Genética
       </h1>
 
-      <p class="h-desc">Plano semanal de hipertrofia com rest-pause, drop set e pico de contração.</p>
+      <p class="h-desc" id="hDesc">Plano semanal de hipertrofia com rest-pause, drop set e pico de contração.</p>
 
       <div class="pg-row">
         <div class="pg-track">
@@ -72,7 +82,38 @@
   </div>
 
   <script>
-    const SK = 'adg-v12';
+    let currentProfile = 1;
+    function getSK() { return currentProfile === 1 ? 'adg-v12' : 'adg-v12-p2'; }
+
+    const profilesMeta = {
+      1: {
+        eyebrow: 'Metodologia Avançada',
+        title: '<span class="t-red">Além da</span><br>Genética',
+        desc: 'Plano semanal de hipertrofia com rest-pause, drop set e pico de contração.'
+      },
+      2: {
+        eyebrow: 'Condicionamento & Redução',
+        title: '<span class="t-red">Emagrecimento</span><br>Intensivo',
+        desc: 'Déficit calórico contínuo através de cárdio, intensidade progressiva e rotina ativa.'
+      }
+    };
+
+    function switchProfile(p) {
+      currentProfile = p;
+      document.body.classList.toggle('theme-emagrecimento', p === 2);
+      
+      document.getElementById('p1Btn').className = 'p-tab' + (p === 1 ? ' active' : '');
+      document.getElementById('p2Btn').className = 'p-tab' + (p === 2 ? ' active' : '');
+      
+      document.getElementById('hEyebrow').innerHTML = profilesMeta[p].eyebrow;
+      document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
+      document.getElementById('hDesc').innerHTML = profilesMeta[p].desc;
+      
+      st = ld();
+      act = 'semana';
+      renderTabs();
+      render();
+    }
 
     /* ---- icons for each day ---- */
     const dayIcons = {
@@ -84,7 +125,7 @@
       'Descanso': 'ph-fill ph-moon-stars'
     };
 
-    const D = [
+    const D1 = [
       {
         id: 'semana', title: 'Semana', type: 'week', days: [
           { d: 'Seg', plan: 'Treino A', sub: 'Peito · Ombro · Tríceps' },
@@ -164,6 +205,84 @@
       }
     ];
 
+    const D2 = [
+      {
+        id: 'semana', title: 'Semana', type: 'week', days: [
+          { d: 'Seg', plan: 'Treino A', sub: 'Pernas + Cardio' },
+          { d: 'Ter', plan: 'Treino B', sub: 'Peito + Tríceps' },
+          { d: 'Qua', plan: 'Treino C', sub: 'Costas + Bíceps' },
+          { d: 'Qui', plan: 'Treino D', sub: 'Pernas (Glúteo)' },
+          { d: 'Sex', plan: 'Treino E', sub: 'Ombro + Abdômen' },
+          { d: 'Sáb', plan: 'Descanso', sub: 'Recuperação' },
+          { d: 'Dom', plan: 'Descanso', sub: 'Repouso total' }
+        ]
+      },
+      {
+        id: 'treino-a', title: 'Treino A', sub: 'Pernas (Pesado) + Cardio',
+        alert: 'Mounjaro: Pode gerar fraqueza; coma proteína leve antes.',
+        ex: [
+          { id: 'a1', n: 'Agachamento', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 8–10 (30-60s)' }] },
+          { id: 'a2', n: 'Leg press', t: null, s: [{ l: 'Trabalho', d: '4 × 10 (30-60s)' }] },
+          { id: 'a3', n: 'Cadeira extensora', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'a4', n: 'Mesa flexora', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'a5', n: 'Panturrilha', t: null, s: [{ l: 'Trabalho', d: '4 × 15 (30-60s)' }] },
+          { id: 'a6', n: 'Cardio', t: 'Esteira inclinada', s: [{ l: 'Fim de Treino', d: '1 × 20 min' }] }
+        ]
+      },
+      {
+        id: 'treino-b', title: 'Treino B', sub: 'Peito + Tríceps + HIIT',
+        alert: 'Mounjaro: Respeite limites, não treine pesado em jejum.',
+        ex: [
+          { id: 'b1', n: 'Supino reto', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 8 (30-60s)' }] },
+          { id: 'b2', n: 'Supino inclinado', t: null, s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
+          { id: 'b3', n: 'Crucifixo', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'b4', n: 'Tríceps pulley', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'b5', n: 'Tríceps banco', t: null, s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
+          { id: 'b6', n: 'HIIT', t: 'Corrida leve + sprint', s: [{ l: 'Fim de Treino', d: '1 × 15 min' }] }
+        ]
+      },
+      {
+        id: 'treino-c', title: 'Treino C', sub: 'Costas + Bíceps',
+        alert: 'Mounjaro: Evite esforço excessivo em jejum absoluto.',
+        ex: [
+          { id: 'c1', n: 'Puxada na frente', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 10 (30-60s)' }] },
+          { id: 'c2', n: 'Remada curvada', t: null, s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
+          { id: 'c3', n: 'Remada baixa', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'c4', n: 'Rosca direta', t: null, s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
+          { id: 'c5', n: 'Rosca alternada', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'c6', n: 'Caminhada Rápida', t: 'Ritmo constante', s: [{ l: 'Fim de Treino', d: '1 × 20 min' }] }
+        ]
+      },
+      {
+        id: 'treino-d', title: 'Treino D', sub: 'Pernas (Ênfase Glúteo)',
+        alert: 'Mounjaro: Pode gerar enjoo. Alimentação leve recomendada antes.',
+        ex: [
+          { id: 'd1', n: 'Levantamento terra', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 8 (30-60s)' }] },
+          { id: 'd2', n: 'Afundo (com halter)', t: 'Cada perna', s: [{ l: 'Trabalho', d: '3 × 10 (30-60s)' }] },
+          { id: 'd3', n: 'Cadeira abdutora', t: null, s: [{ l: 'Trabalho', d: '3 × 15 (30-60s)' }] },
+          { id: 'd4', n: 'Glúteo no cabo', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'd5', n: 'Panturrilha', t: null, s: [{ l: 'Trabalho', d: '4 × 15 (30-60s)' }] },
+          { id: 'd6', n: 'Cardio', t: 'Escada ou Bike', s: [{ l: 'Fim de Treino', d: '1 × 15-20 min' }] }
+        ]
+      },
+      {
+        id: 'treino-e', title: 'Treino E', sub: 'Ombro + Cardio + Abdômen',
+        alert: 'Mounjaro: Respeite seus limites durante o cardio.',
+        ex: [
+          { id: 'e1', n: 'Desenvolvimento c/ halter', t: 'Progressão de carga', s: [{ l: 'Trabalho', d: '4 × 10 (30-60s)' }] },
+          { id: 'e2', n: 'Elevação lateral', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'e3', n: 'Elevação frontal', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'e4', n: 'Encolhimento', t: null, s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'e5', n: 'Prancha', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 30-60s' }] },
+          { id: 'e6', n: 'Abdominal crunch', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 15 (30-60s)' }] },
+          { id: 'e7', n: 'Elevação de pernas', t: 'Abdômen', s: [{ l: 'Trabalho', d: '3 × 12 (30-60s)' }] },
+          { id: 'e8', n: 'Cardio Leve', t: 'Recuperação', s: [{ l: 'Fim de Treino', d: '1 × 20 min' }] }
+        ]
+      }
+    ];
+
+    function getD() { return currentProfile === 1 ? D1 : D2; }
+
     /* ============================================ STATE ============================================ */
     const $t = document.getElementById('tabs'), $m = document.getElementById('content'), $md = document.getElementById('modal');
     let act = 'semana', st = ld(), mCb = null;
@@ -173,8 +292,8 @@
     $md.onclick = e => { if (e.target === $md) { $md.classList.remove('open'); mCb = null } };
     function ask(msg, cb) { document.getElementById('mMsg').textContent = msg; mCb = cb; $md.classList.add('open') }
 
-    function ld() { try { return JSON.parse(localStorage.getItem(SK)) || {} } catch { return {} } }
-    function sv() { try { localStorage.setItem(SK, JSON.stringify(st)) } catch { } }
+    function ld() { try { return JSON.parse(localStorage.getItem(getSK())) || {} } catch { return {} } }
+    function sv() { try { localStorage.setItem(getSK(), JSON.stringify(st)) } catch { } }
     function k(a, b, c) { return a + '|' + b + '|' + c }
     function gc(a, b, c) { return !!st[k(a, b, c)] }
     function sc(a, b, c, v) { st[k(a, b, c)] = v }
@@ -188,12 +307,13 @@
       if (lo.includes('rest')) { const m = t.match(/(\d+)\s*rest/i); r.push({ txt: (m ? m[1] + ' ' : '') + 'Rest-Pause', cls: 'tag-rest' }) }
       if (lo.includes('drop')) { const m = t.match(/(\d+)\s*drop/i); r.push({ txt: (m ? m[1] + ' ' : '') + 'Drop Set', cls: 'tag-drop' }) }
       if (lo.includes('pico')) { const m = t.match(/(\d+)s/i); r.push({ txt: (m ? m[1] + 's ' : '') + 'Pico', cls: 'tag-pico' }) }
+      if (r.length === 0) r.push({ txt: t, cls: 'tag-pico' }); // Fallback tag rendering
       return r;
     }
 
     function prog() {
       let t = 0, d = 0, exd = 0;
-      D.forEach(tab => {
+      getD().forEach(tab => {
         if (!tab.ex) return; tab.ex.forEach(e => {
           e.s.forEach((_, i) => { t++; if (gc(tab.id, e.id, i)) d++ });
           if (ed(tab.id, e.id, e.s.length)) exd++;
@@ -216,7 +336,7 @@
     /* ============================================ RENDER ============================================ */
     function renderTabs() {
       $t.innerHTML = '';
-      D.forEach(tab => {
+      getD().forEach(tab => {
         const b = document.createElement('button');
         b.className = 'tab' + (tab.id === act ? ' active' : '');
         b.textContent = tab.title;
@@ -232,7 +352,7 @@
     }
 
     function render() {
-      const tab = D.find(t => t.id === act);
+      const tab = getD().find(t => t.id === act);
       $m.innerHTML = '';
       if (!tab) return;
       tab.type === 'week' ? rWeek(tab) : rWork(tab);
@@ -253,7 +373,7 @@
         const rest = d.plan.toLowerCase().includes('descanso');
         const wi = wid(d.plan);
         let isDone = false;
-        if (wi) { const w = D.find(t => t.id === wi); if (w && w.ex) isDone = w.ex.every(e => ed(wi, e.id, e.s.length)) }
+        if (wi) { const w = getD().find(t => t.id === wi); if (w && w.ex) isDone = w.ex.every(e => ed(wi, e.id, e.s.length)) }
 
         const card = document.createElement('div');
         card.className = 'day-card' + (rest ? ' rest' : '') + (isDone ? ' done' : '');
@@ -276,16 +396,40 @@
       p.appendChild(g);
 
       /* Legend */
-      const lg = document.createElement('div'); lg.className = 'legend';
-      lg.innerHTML = `
-    <p class="legend-t">Técnicas Aplicadas</p>
-    <div class="legend-list">
-      <div class="legend-item"><span class="legend-dot lr"></span><strong>Rest-Pause</strong>10s de pausa na falha muscular</div>
-      <div class="legend-item"><span class="legend-dot lp"></span><strong>Drop Set</strong>Redução de carga sem descanso</div>
-      <div class="legend-item"><span class="legend-dot lc"></span><strong>Pico</strong>2s de squeeze na máxima tensão</div>
-    </div>
-  `;
-      p.appendChild(lg);
+      if (currentProfile === 1) {
+        const lg = document.createElement('div'); lg.className = 'legend';
+        lg.innerHTML = `
+      <p class="legend-t">Técnicas Aplicadas</p>
+      <div class="legend-list">
+        <div class="legend-item"><span class="legend-dot lr"></span><strong>Rest-Pause</strong>10s de pausa na falha muscular</div>
+        <div class="legend-item"><span class="legend-dot lp"></span><strong>Drop Set</strong>Redução de carga sem descanso</div>
+        <div class="legend-item"><span class="legend-dot lc"></span><strong>Pico</strong>2s de squeeze na máxima tensão</div>
+      </div>
+    `;
+        p.appendChild(lg);
+      } else if (currentProfile === 2) {
+        const lg = document.createElement('div'); lg.className = 'legend';
+        lg.innerHTML = `
+      <p class="legend-t" style="color: var(--orange)">Intensidade & Diretrizes</p>
+      <div class="legend-list" style="margin-bottom: 18px;">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Ativação</strong>Descanso de 30–60s e esforço até a quase falha na última série.</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Evolução</strong>Progressão gradual das cargas a cada semana.</div>
+      </div>
+
+      <p class="legend-t" style="color: var(--red)">Precauções com Mounjaro</p>
+      <div class="legend-list" style="margin-bottom: 18px;">
+        <div class="legend-item"><span class="legend-dot lr"></span><strong>Alerta</strong>Possibilidade de fraqueza térmica ou enjoo.</div>
+        <div class="legend-item"><span class="legend-dot lr"></span><strong>Protocolo</strong>Não treine com peso em jejum absoluto. Ingira uma proteína leve antes e priorize a adaptação do seu corpo.</div>
+      </div>
+
+      <p class="legend-t" style="color: var(--green)">Projeção de Resultados</p>
+      <div class="legend-list">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--green); box-shadow:0 0 6px var(--green-glow)"></span><strong>Metas</strong>Perda de peso consistente e sustentável (2 a 5 kg por mês).</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--green); box-shadow:0 0 6px var(--green-glow)"></span><strong>Impactos</strong>Condicionamento físico ampliado promovendo um corpo rígido e mais firme.</div>
+      </div>
+    `;
+        p.appendChild(lg);
+      }
       $m.appendChild(p);
     }
 
@@ -358,12 +502,21 @@
 
       const top = document.createElement('div'); top.className = 'ex-top';
       const info = document.createElement('div'); info.className = 'ex-info';
-      info.innerHTML = `<div class="ex-num">Exercício ${String(num).padStart(2, '0')}</div><div class="ex-name">${e.n}</div>${tgsH}`;
+      info.innerHTML = `<div class="ex-name">${e.n}</div>${tgsH}`;
       top.appendChild(info); top.appendChild(db); card.appendChild(top);
 
       const sw = document.createElement('div'); sw.className = 'sets';
       e.s.forEach((s, i) => {
         const row = document.createElement('div'); row.className = 'set-row';
+        row.onclick = (event) => {
+          // If the click wasn't directly on the checkbox, toggle it
+          const cb = row.querySelector('.cb');
+          if (event.target !== cb) {
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change'));
+          }
+        };
+        
         const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'cb';
         cb.checked = gc(tab.id, e.id, i); cb.setAttribute('aria-label', s.l);
         cb.onchange = () => {
