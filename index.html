@@ -18,7 +18,11 @@
 
 <body>
 
-  <div class="bg"></div>
+  <div class="bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
 
   <div class="app">
 
@@ -58,6 +62,9 @@
         <div class="stat"><span class="stat-n ce" id="sDone">0</span><span class="stat-l">Feitos</span></div>
       </div>
     </header>
+
+    <!-- PERSISTENT DIET CARD (PROFILE 1) -->
+    <div id="dietCard" class="diet-wrap" style="display:none"></div>
 
     <nav id="tabs" class="tabs"></nav>
     <main id="content"></main>
@@ -107,18 +114,19 @@
     function switchProfile(p) {
       currentProfile = p;
       document.body.classList.toggle('theme-emagrecimento', p === 2);
-      
+
       document.getElementById('p1Btn').className = 'p-tab' + (p === 1 ? ' active' : '');
       document.getElementById('p2Btn').className = 'p-tab' + (p === 2 ? ' active' : '');
-      
+
       document.getElementById('hEyebrow').innerHTML = profilesMeta[p].eyebrow;
       document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
       document.getElementById('hDesc').innerHTML = profilesMeta[p].desc;
-      
+
       st = ld();
       act = 'semana';
       renderTabs();
       render();
+      renderDietCard();
     }
 
     /* ---- icons for each day ---- */
@@ -128,7 +136,25 @@
       'Treino C': 'ph-fill ph-sneaker-move',
       'Treino D': 'ph-fill ph-barbell',
       'Treino E': 'ph-fill ph-hand-fist',
-      'Descanso': 'ph-fill ph-moon-stars'
+      'Descanso': 'ph-fill ph-moon-stars',
+      'Dieta': 'ph-fill ph-fork-knife'
+    };
+
+    const dietData = {
+      header: 'Recomendação Nutricional',
+      sub: 'Meta: ~90g Proteína/dia (59kg Mant./Ganho)',
+      meals: [
+        { t: 'Café da Manhã', i: '2 ovos mexidos, 1 copo de leite, 1 pão francês', p: '~20 g' },
+        { t: 'Almoço', i: '100 g frango grelhado, 2 colheres arroz, 1 concha feijão, Salada', p: '~33 g' },
+        { t: 'Lanche da Tarde', i: '1 iogurte natural, 1 banana, 2 colheres de aveia', p: '~10 g' },
+        { t: 'Jantar', i: '100 g carne (ou frango), Arroz + feijão', p: '~25 g' },
+        { t: 'Ceia (Opcional)', i: '1 copo de leite OU 1 ovo cozido', p: '6–8 g' }
+      ],
+      tips: [
+        'Não precisa comer tudo perfeito todo dia — tenta manter próximo disso',
+        'Se quiser facilitar: whey ajuda, mas não é obrigatório',
+        'Água e sono fazem MUITA diferença no resultado'
+      ]
     };
 
     const D1 = [
@@ -361,7 +387,8 @@
       const tab = getD().find(t => t.id === act);
       $m.innerHTML = '';
       if (!tab) return;
-      tab.type === 'week' ? rWeek(tab) : rWork(tab);
+      if (tab.type === 'week') rWeek(tab);
+      else rWork(tab);
       uprog();
     }
 
@@ -375,14 +402,22 @@
 
       const g = document.createElement('div'); g.className = 'week-grid';
 
-      tab.days.forEach(d => {
+      tab.days.forEach((d, idx) => {
         const rest = d.plan.toLowerCase().includes('descanso');
         const wi = wid(d.plan);
         let isDone = false;
         if (wi) { const w = getD().find(t => t.id === wi); if (w && w.ex) isDone = w.ex.every(e => ed(wi, e.id, e.s.length)) }
 
         const card = document.createElement('div');
-        card.className = 'day-card' + (rest ? ' rest' : '') + (isDone ? ' done' : '');
+        card.className = 'day-card reveal ' + `stagger-${(idx % 5) + 1}` + (rest ? ' rest' : '') + (isDone ? ' done' : '');
+        if (!rest && wi) {
+          card.style.cursor = 'pointer';
+          card.onclick = () => {
+            act = wi;
+            renderTabs();
+            render();
+          };
+        }
 
         const badge = wi && !rest ? `<span class="day-badge">${d.plan.split(' ')[1]}</span>` : '';
         const iconCls = dayIcons[d.plan] || 'ph-fill ph-dumbbell';
@@ -466,7 +501,12 @@
       p.appendChild(hd);
 
       const list = document.createElement('div'); list.className = 'ex-list';
-      tab.ex.forEach((e, idx) => list.appendChild(buildCard(tab, e, idx + 1, cBtn)));
+      tab.ex.forEach((e, idx) => {
+        const card = buildCard(tab, e, idx + 1, cBtn);
+        card.classList.add('reveal');
+        card.classList.add(`stagger-${(idx % 5) + 1}`);
+        list.appendChild(card);
+      });
       p.appendChild(list);
 
       const rw = document.createElement('div'); rw.className = 'reset-wrap';
@@ -479,6 +519,49 @@
       rw.appendChild(rb); p.appendChild(rw);
       $m.appendChild(p);
     }
+
+    /* ============================================ DIET PERSISTENT ============================================ */
+    let dietOpen = false;
+    function renderDietCard() {
+      const el = document.getElementById('dietCard');
+      if (currentProfile !== 1) { el.style.display = 'none'; return; }
+      el.style.display = 'block';
+
+      el.innerHTML = `
+        <div class="diet-card-main">
+          <div class="diet-header" onclick="toggleDiet()">
+            <div class="diet-titles">
+              <span class="diet-eyebrow">Plano Alimentar</span>
+              <h3 class="diet-title">Recomendação de Dieta</h3>
+            </div>
+            <i class="ph ph-caret-${dietOpen ? 'up' : 'down'} diet-arrow"></i>
+          </div>
+          <div class="diet-collapsible ${dietOpen ? 'open' : ''}">
+            <div class="diet-content">
+              <div class="meal-list">
+                ${dietData.meals.map(m => `
+                  <div class="meal-item">
+                    <div class="meal-info">
+                      <span class="meal-time">${m.t}</span>
+                      <span class="meal-desc">${m.i}</span>
+                    </div>
+                    <span class="meal-prot">${m.p}</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="diet-tips">
+                <p class="tips-title">💡 Dicas do Geovanne</p>
+                <ul>
+                  ${dietData.tips.map(t => `<li>${t}</li>`).join('')}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    window.toggleDiet = () => { dietOpen = !dietOpen; renderDietCard(); };
 
     /* ============================================ CARD ============================================ */
     function buildCard(tab, e, num, cBtn) {
@@ -522,7 +605,7 @@
             cb.dispatchEvent(new Event('change'));
           }
         };
-        
+
         const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'cb';
         cb.checked = gc(tab.id, e.id, i); cb.setAttribute('aria-label', s.l);
         cb.onchange = () => {
@@ -554,7 +637,7 @@
       if (!all && was) { swd(tab.id, false); btn.classList.remove('done'); btn.innerHTML = '<i class="ph ph-check-circle"></i> Marcar como concluído'; sv() }
     }
 
-    renderTabs(); render(); uprog();
+    renderTabs(); render(); renderDietCard(); uprog();
   </script>
 </body>
 
