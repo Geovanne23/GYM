@@ -58,7 +58,7 @@
 
       <div class="stats">
         <div class="stat"><span class="stat-n cr">5</span><span class="stat-l">Treinos</span></div>
-        <div class="stat"><span class="stat-n cg">36</span><span class="stat-l">Exercícios</span></div>
+        <div class="stat"><span class="stat-n cg">38</span><span class="stat-l">Exercícios</span></div>
         <div class="stat"><span class="stat-n ce" id="sDone">0</span><span class="stat-l">Feitos</span></div>
       </div>
     </header>
@@ -160,10 +160,10 @@
     const D1 = [
       {
         id: 'semana', title: 'Semana', type: 'week', days: [
-          { d: 'Seg', plan: 'Treino A', sub: 'Peito · Ombro · Tríceps' },
+          { d: 'Seg', plan: 'Treino A', sub: 'Peito · Ombro · Tríceps · Abd' },
           { d: 'Ter', plan: 'Treino B', sub: 'Costas · Bíceps' },
-          { d: 'Qua', plan: 'Treino C', sub: 'Membros Inferiores' },
-          { d: 'Qui', plan: 'Descanso', sub: 'Recuperação ativa' },
+          { d: 'Qua', plan: 'Descanso', sub: 'Recuperação ativa' },
+          { d: 'Qui', plan: 'Treino C', sub: 'Membros Inferiores · Abd' },
           { d: 'Sex', plan: 'Treino D', sub: 'Ombros · Peito · Tríceps' },
           { d: 'Sáb', plan: 'Treino E', sub: 'Bíceps · Costas · Abd' },
           { d: 'Dom', plan: 'Descanso', sub: 'Repouso total' }
@@ -179,7 +179,9 @@
           { id: 'a4', n: 'Voador', t: '2s pico de contração + 1 dropset', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 10–15 (1 min)' }] },
           { id: 'a5', n: 'Elevação Frontal', t: null, s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2 min)' }] },
           { id: 'a6', n: 'Elevação Lateral Sentado c/ Halteres', t: '1 drop set', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1 min)' }, { l: 'Trabalho', d: '2 × 8–12 (1 min)' }] },
-          { id: 'a7', n: 'Tríceps Francês na Corda', t: null, s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 6–10 (2 min)' }] }
+          { id: 'a7', n: 'Tríceps Francês na Corda', t: null, s: [{ l: 'Ajuste', d: '1 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 6–10 (2 min)' }] },
+          { id: 'a8', n: 'Abdominal Infra na Torre', t: '2s pico', s: [{ l: 'Trabalho', d: '3 × RM (1 min)' }] },
+          { id: 'a9', n: 'Abdominal Supra na Prancha Declinada', t: null, s: [{ l: 'Trabalho', d: '3 × RM (1 min)' }] }
         ]
       },
       {
@@ -205,7 +207,9 @@
           { id: 'c4', n: 'Flexor Deitado', t: '2s pico', s: [{ l: 'Aquecimento', d: '1 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
           { id: 'c5', n: 'Stiff', t: null, s: [{ l: 'Aquecimento', d: '1 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 8–10 (2–3 min)' }] },
           { id: 'c6', n: 'Elevação de Quadril', t: '2s pico + 1 drop', s: [{ l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '2 × 6–10 (2–3 min)' }] },
-          { id: 'c7', n: 'Panturrilha em Pé (máquina ou smith)', t: '2s pico', s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 10–15 (2 min)' }] }
+          { id: 'c7', n: 'Panturrilha em Pé (máquina ou smith)', t: '2s pico', s: [{ l: 'Aquecimento', d: '1–2 × 10–15 (1 min)' }, { l: 'Ajuste', d: '1–2 × 4–6 (1–2 min)' }, { l: 'Trabalho', d: '3 × 10–15 (2 min)' }] },
+          { id: 'c8', n: 'Abdominal Infra na Torre', t: '2s pico', s: [{ l: 'Trabalho', d: '3 × RM (1 min)' }] },
+          { id: 'c9', n: 'Abdominal Supra na Prancha Declinada', t: null, s: [{ l: 'Trabalho', d: '3 × RM (1 min)' }] }
         ]
       },
       {
