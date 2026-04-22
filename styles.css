@@ -81,6 +81,34 @@ body.theme-emagrecimento {
   --accent-glow: 0 0 15px rgba(244, 63, 94, 0.4);
 }
 
+body.theme-abcd {
+  --red: #e63946; /* Badge Red */
+  --red-soft: rgba(230, 57, 70, 0.1);
+  --red-glow: rgba(230, 57, 70, 0.3);
+  --red-border: rgba(230, 57, 70, 0.2);
+  --orange: #ffffff; /* Secondary Accent is White */
+
+  /* Background Orbs Theme 3 (Corinthians - Black/White/Silver) */
+  --orb-1: rgba(255, 255, 255, 0.08); /* White Cloud */
+  --orb-2: rgba(255, 255, 255, 0.05); /* Soft Silver */
+  --orb-3: rgba(0, 0, 0, 0.1); /* Dark depth */
+
+  /* Corinthians Accents (Black & White with Red detail) */
+  --accent-base: #ffffff;
+  --accent-light: #f0f0f0;
+  --accent-deep: #aaaaaa;
+  --accent-gradient: linear-gradient(90deg, #ffffff, #888888, #ffffff);
+  --accent-glow: 0 0 15px rgba(255, 255, 255, 0.4);
+  
+  /* Override header and cards for Black theme */
+  --s1: #000000;
+  --s2: #080808;
+  --s3: #111111;
+  --s4: #1a1a1a;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-2: rgba(255, 255, 255, 0.15);
+}
+
 /* ---- RESET ---- */
 *,
 *::before,
