@@ -34,6 +34,9 @@
       <button id="p2Btn" class="p-tab" onclick="switchProfile(2)">
         <i class="ph-fill ph-fire"></i> Perfil 2: Emagrecimento
       </button>
+      <button id="p3Btn" class="p-tab" onclick="switchProfile(3)">
+        <i class="ph-fill ph-lightning"></i> Perfil 3: Evolução
+      </button>
     </div>
 
     <!-- HEADER -->
@@ -57,8 +60,8 @@
       </div>
 
       <div class="stats">
-        <div class="stat"><span class="stat-n cr">5</span><span class="stat-l">Treinos</span></div>
-        <div class="stat"><span class="stat-n cg">38</span><span class="stat-l">Exercícios</span></div>
+        <div class="stat"><span class="stat-n cr" id="sWorkouts">5</span><span class="stat-l">Treinos</span></div>
+        <div class="stat"><span class="stat-n cg" id="sTotal">40</span><span class="stat-l">Exercícios</span></div>
         <div class="stat"><span class="stat-n ce" id="sDone">0</span><span class="stat-l">Feitos</span></div>
       </div>
     </header>
@@ -96,7 +99,11 @@
 
   <script>
     let currentProfile = 1;
-    function getSK() { return currentProfile === 1 ? 'adg-v12' : 'adg-v12-p2'; }
+    function getSK() {
+      if (currentProfile === 1) return 'adg-v12';
+      if (currentProfile === 2) return 'adg-v12-p2';
+      return 'adg-v12-p3';
+    }
 
     const profilesMeta = {
       1: {
@@ -108,15 +115,22 @@
         eyebrow: 'Condicionamento & Redução',
         title: '<span class="t-red">Emagrecimento</span><br>Intensivo',
         desc: 'Déficit calórico contínuo através de cárdio, intensidade progressiva e rotina ativa.'
+      },
+      3: {
+        eyebrow: 'Divisão Muscular · Ordem Fixa',
+        title: '<span class="t-red">Evolução</span><br>Total',
+        desc: 'Divisão por grupos musculares em ciclo contínuo: A → B → C → D.'
       }
     };
 
     function switchProfile(p) {
       currentProfile = p;
       document.body.classList.toggle('theme-emagrecimento', p === 2);
+      document.body.classList.toggle('theme-abcd', p === 3);
 
       document.getElementById('p1Btn').className = 'p-tab' + (p === 1 ? ' active' : '');
       document.getElementById('p2Btn').className = 'p-tab' + (p === 2 ? ' active' : '');
+      document.getElementById('p3Btn').className = 'p-tab' + (p === 3 ? ' active' : '');
 
       document.getElementById('hEyebrow').innerHTML = profilesMeta[p].eyebrow;
       document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
@@ -323,7 +337,80 @@
       }
     ];
 
-    function getD() { return currentProfile === 1 ? D1 : D2; }
+    const D3 = [
+      {
+        id: 'semana', title: 'Semana', type: 'week', days: [
+          { d: 'Dia 1', plan: 'Treino A', sub: 'Dorsais · Abdominal Supra' },
+          { d: 'Dia 2', plan: 'Treino B', sub: 'Coxas · Glúteos · Panturrilha' },
+          { d: 'Dia 3', plan: 'Treino C', sub: 'Peitoral · Deltoide · Abd Infra' },
+          { d: 'Dia 4', plan: 'Treino D', sub: 'Bíceps · Tríceps' },
+          { d: '—', plan: 'Descanso', sub: 'Repetir ciclo ABCD' }
+        ]
+      },
+      {
+        id: 'treino-a', title: 'Treino A', sub: 'Dorsais + Abdominal',
+        alert: 'Ordem fixa · Foco em dorsais com abdominal supra no final',
+        ex: [
+          { id: 'a1', n: 'Pulley Costas', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'a2', n: 'Remada Unilateral', t: null, s: [{ l: 'Trabalho', d: '3–4 séries (cada lado)' }] },
+          { id: 'a3', n: 'Remada (máquina)', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'a4', n: 'Pulley Frente', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'a5', n: 'Pull Over', t: null, s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'a6', n: 'Peck Deck (inverso)', t: null, s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'a7', n: 'Abdominal Supra', t: null, s: [{ l: 'Trabalho', d: '3 × RM' }] }
+        ]
+      },
+      {
+        id: 'treino-b', title: 'Treino B', sub: 'Coxas, Glúteos e Panturrilha',
+        alert: 'Ordem fixa · Membros inferiores completo',
+        ex: [
+          { id: 'b1', n: 'Extensão', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'b2', n: 'Leg Press 45', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'b3', n: 'Afundo', t: null, s: [{ l: 'Trabalho', d: '3 séries (cada lado)' }] },
+          { id: 'b4', n: 'Flexão (deitado)', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'b5', n: 'Flexor em Pé', t: null, s: [{ l: 'Trabalho', d: '3 séries (cada lado)' }] },
+          { id: 'b6', n: 'Panturrilha (unilateral)', t: null, s: [{ l: 'Trabalho', d: '3–4 séries (cada lado)' }] },
+          { id: 'b7', n: 'Panturrilha (sentado)', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] }
+        ]
+      },
+      {
+        id: 'treino-c', title: 'Treino C', sub: 'Peitoral, Deltoide/Trapézio e Abdominal',
+        alert: 'Ordem fixa · Peitoral + Deltoide + Abdominal infra no final',
+        ex: [
+          { id: 'c1', n: 'Crucifixo', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'c2', n: 'Supino Inclinado', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'c3', n: 'Supino Reto', t: null, s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'c4', n: 'Peck Deck', t: null, s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'c5', n: 'Supino Articulado', t: null, s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'c6', n: 'Desenvolvimento (articulado)', t: 'Deltoide / Trapézio', s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'c7', n: 'Elevação Lateral', t: 'Deltoide / Trapézio', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'c8', n: 'Abdominal Infra', t: null, s: [{ l: 'Trabalho', d: '3 × RM' }] }
+        ]
+      },
+      {
+        id: 'treino-d', title: 'Treino D', sub: 'Bíceps/Antebraço e Tríceps',
+        alert: 'Ordem fixa para os principais · Extras sem ordem definida',
+        ex: [
+          { id: 'd1', n: 'Rosca Direta', t: 'Bíceps / Antebraço', s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'd2', n: 'Rosca Scott (máquina)', t: 'Bíceps / Antebraço', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'd3', n: 'Rosca Martelo', t: 'Bíceps / Antebraço', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'd4', n: 'Testa', t: 'Tríceps', s: [{ l: 'Trabalho', d: '3–4 séries' }] },
+          { id: 'd5', n: 'Pulley Corda', t: 'Tríceps', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'd6', n: 'Pulley', t: 'Tríceps', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'd7', n: 'Francês (extra)', t: 'Tríceps · Sem ordem definida', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'd8', n: 'Supinado (extra)', t: 'Tríceps · Sem ordem definida', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'd9', n: 'Banco (extra)', t: 'Tríceps · Sem ordem definida', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'd10', n: 'Extensão (extra)', t: 'Tríceps · Sem ordem definida', s: [{ l: 'Trabalho', d: '3 séries' }] },
+          { id: 'd11', n: 'Paralela (extra)', t: 'Tríceps · Sem ordem definida', s: [{ l: 'Trabalho', d: '3 séries' }] }
+        ]
+      }
+    ];
+
+    function getD() {
+      if (currentProfile === 1) return D1;
+      if (currentProfile === 2) return D2;
+      return D3;
+    }
 
     /* ============================================ STATE ============================================ */
     const $t = document.getElementById('tabs'), $m = document.getElementById('content'), $md = document.getElementById('modal');
@@ -354,19 +441,24 @@
     }
 
     function prog() {
-      let t = 0, d = 0, exd = 0;
+      let t = 0, d = 0, exd = 0, totalEx = 0, totalWk = 0;
       getD().forEach(tab => {
-        if (!tab.ex) return; tab.ex.forEach(e => {
+        if (!tab.ex) return;
+        totalWk++;
+        tab.ex.forEach(e => {
+          totalEx++;
           e.s.forEach((_, i) => { t++; if (gc(tab.id, e.id, i)) d++ });
           if (ed(tab.id, e.id, e.s.length)) exd++;
         })
       });
-      return { pct: t > 0 ? Math.round(d / t * 100) : 0, exd };
+      return { pct: t > 0 ? Math.round(d / t * 100) : 0, exd, totalEx, totalWk };
     }
     function uprog() {
-      const { pct, exd } = prog();
+      const { pct, exd, totalEx, totalWk } = prog();
       const f = document.getElementById('pFill'), t = document.getElementById('pText'), s = document.getElementById('sDone');
+      const sw = document.getElementById('sWorkouts'), st2 = document.getElementById('sTotal');
       if (f) f.style.width = pct + '%'; if (t) t.textContent = pct + '%'; if (s) s.textContent = exd;
+      if (sw) sw.textContent = totalWk; if (st2) st2.textContent = totalEx;
     }
     function wid(plan) {
       const p = plan.toLowerCase();
@@ -471,6 +563,24 @@
       <div class="legend-list">
         <div class="legend-item"><span class="legend-dot lr"></span><strong>Alimentação</strong>Evitar treino pesado em jejum. Consumir proteína leve antes do treino.</div>
         <div class="legend-item"><span class="legend-dot lr"></span><strong>Atenção</strong>Ajustar intensidade se houver fraqueza e priorizar hidratação.</div>
+      </div>
+    `;
+        p.appendChild(lg);
+      } else if (currentProfile === 3) {
+        const lg = document.createElement('div'); lg.className = 'legend';
+        lg.innerHTML = `
+      <p class="legend-t" style="color: #4ecdc4">Divisão ABCD — Ordem Fixa</p>
+      <div class="legend-list" style="margin-bottom: 18px;">
+        <div class="legend-item"><span class="legend-dot" style="background:#4ecdc4; box-shadow:0 0 6px rgba(78,205,196,0.5)"></span><strong>Treino A</strong>Dorsais (Costas) + Abdominal Supra</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ff6b6b; box-shadow:0 0 6px rgba(255,107,107,0.5)"></span><strong>Treino B</strong>Coxas, Glúteos e Panturrilha</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ffd93d; box-shadow:0 0 6px rgba(255,217,61,0.5)"></span><strong>Treino C</strong>Peitoral + Deltoide/Trapézio + Abd Infra</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#c084fc; box-shadow:0 0 6px rgba(192,132,252,0.5)"></span><strong>Treino D</strong>Bíceps/Antebraço + Tríceps</div>
+      </div>
+
+      <p class="legend-t" style="color: var(--red)">Observação</p>
+      <div class="legend-list">
+        <div class="legend-item"><span class="legend-dot lr"></span><strong>Ciclo contínuo</strong>A → B → C → D → repetir. Sem dia fixo na semana.</div>
+        <div class="legend-item"><span class="legend-dot lr"></span><strong>Extras</strong>Exercícios marcados como "extra" não têm ordem definida dentro do grupo.</div>
       </div>
     `;
         p.appendChild(lg);
