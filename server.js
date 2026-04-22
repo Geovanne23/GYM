@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const { db } = require('./database');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname; // Usa o diretório do projeto, independente do cwd
@@ -214,6 +215,142 @@ function serveFile(req, res, filePath, statusCode = 200) {
   });
 }
 
+// ====== API HANDLER ======
+function handleApi(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  // Habilita CORS se for necessário futuramente
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const urlParams = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = urlParams.pathname;
+
+  if (pathname === '/api/data' && req.method === 'GET') {
+    const perfilId = urlParams.searchParams.get('perfil_id');
+    if (!perfilId) { res.writeHead(400); return res.end(JSON.stringify({error: 'perfil_id required'})); }
+
+    const data = { week: { id: 'semana', title: 'Semana', type: 'week', days: [] }, treinos: [] };
+    
+    db.all('SELECT * FROM semana WHERE perfil_id = ?', [perfilId], (err, weekRows) => {
+      if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+      data.week.days = weekRows.map(r => ({ d: r.d, plan: r.plan, sub: r.sub }));
+      
+      db.all('SELECT * FROM treinos WHERE perfil_id = ?', [perfilId], (err, treinoRows) => {
+        if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+        
+        db.all('SELECT e.* FROM exercicios e JOIN treinos t ON e.treino_id = t.id WHERE t.perfil_id = ?', [perfilId], (err, exerciciosRows) => {
+          if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+
+          data.treinos = treinoRows.map(t => {
+            const ex = exerciciosRows.filter(e => e.treino_id === t.id).map(e => ({
+              id: e.id.split('_')[1],
+              n: e.nome,
+              t: e.tecnica,
+              s: JSON.parse(e.series_json)
+            }));
+            return {
+              id: t.id.split('_')[1],
+              title: t.title,
+              sub: t.sub,
+              alert: t.alert,
+              ex
+            };
+          });
+
+          res.writeHead(200);
+          res.end(JSON.stringify([data.week, ...data.treinos])); // O frontend espera um array D = [week, treino-a, treino-b...]
+        });
+      });
+    });
+    return;
+  }
+
+  if (pathname === '/api/progress' && req.method === 'GET') {
+    const perfilId = urlParams.searchParams.get('perfil_id');
+    db.all('SELECT * FROM progresso WHERE perfil_id = ?', [perfilId], (err, rows) => {
+      if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+      res.writeHead(200); res.end(JSON.stringify(rows));
+    });
+    return;
+  }
+
+  if (pathname === '/api/progress' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk.toString());
+    req.on('end', () => {
+      try {
+        const { perfilId, treinoId, exercicioId, serieIndex, concluido } = JSON.parse(body);
+        db.run(`INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido) 
+                VALUES (?, ?, ?, ?, ?) 
+                ON CONFLICT(perfil_id, treino_id, exercicio_id, serie_index) 
+                DO UPDATE SET concluido = excluded.concluido`,
+          [perfilId, treinoId, exercicioId, serieIndex, concluido ? 1 : 0],
+          function(err) {
+            if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+            res.writeHead(200); res.end(JSON.stringify({success: true}));
+          }
+        );
+      } catch (e) {
+        res.writeHead(400); res.end(JSON.stringify({error: 'Invalid JSON'}));
+      }
+    });
+    return;
+  }
+
+  if (pathname === '/api/progress/workout' && req.method === 'POST') {
+     let body = '';
+     req.on('data', chunk => body += chunk.toString());
+     req.on('end', () => {
+       try {
+         const { perfilId, treinoId, exercicios, concluido } = JSON.parse(body);
+         
+         const stmt = db.prepare(`INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido) 
+                VALUES (?, ?, ?, ?, ?) 
+                ON CONFLICT(perfil_id, treino_id, exercicio_id, serie_index) 
+                DO UPDATE SET concluido = excluded.concluido`);
+                
+         for (const ex of exercicios) {
+           for (let i = 0; i < ex.numSets; i++) {
+             stmt.run(perfilId, treinoId, ex.id, i, concluido ? 1 : 0);
+           }
+         }
+         stmt.finalize();
+         res.writeHead(200); res.end(JSON.stringify({success: true}));
+       } catch (e) {
+         res.writeHead(400); res.end(JSON.stringify({error: 'Invalid JSON'}));
+       }
+     });
+     return;
+  }
+
+  if (pathname === '/api/progress/all' && req.method === 'POST') {
+     let body = '';
+     req.on('data', chunk => body += chunk.toString());
+     req.on('end', () => {
+       try {
+         const { perfilId } = JSON.parse(body);
+         db.run('DELETE FROM progresso WHERE perfil_id = ?', [perfilId], (err) => {
+           if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+           res.writeHead(200); res.end(JSON.stringify({success: true}));
+         });
+       } catch (e) {
+         res.writeHead(400); res.end(JSON.stringify({error: 'Invalid JSON'}));
+       }
+     });
+     return;
+  }
+
+  res.writeHead(404);
+  res.end(JSON.stringify({error: 'Not found'}));
+}
+
 // ====== RESOLVE PRETTY URL → filePath ======
 // Retorna { filePath, redirect } ou null (404)
 function resolveURL(urlPath) {
@@ -279,6 +416,11 @@ const server = http.createServer((req, res) => {
   }
 
   console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${urlPath}`);
+
+  if (urlPath.startsWith('/api/')) {
+    handleApi(req, res);
+    return;
+  }
 
   // Security: path traversal
   const absolute = path.resolve(ROOT, urlPath.replace(/^\//, ''));
