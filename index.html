@@ -97,6 +97,18 @@
     </div>
   </div>
 
+  <!-- GYMRATS MODAL -->
+  <div id="gymratsModal" class="modal-bg">
+    <div class="modal-card gymrats-card">
+      <div class="gymrats-icon">💪</div>
+      <h2 class="gymrats-title">Treino Finalizado!</h2>
+      <p class="gymrats-msg">Você destruiu mais um treino. <br><br>Não esqueça de postar a foto do shape no <strong>GymRats</strong> para manter a disciplina!</p>
+      <div class="modal-btns">
+        <button class="modal-btn btn-confirm gymrats-btn" onclick="document.getElementById('gymratsModal').classList.remove('open')">Bora pra cima!</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentProfile = 1;
     
@@ -413,9 +425,8 @@
         hd.appendChild(al);
       }
 
-      const isDone = wd(tab.id);
-      const cBtn = document.createElement('button'); cBtn.className = 'btn-complete' + (isDone ? ' done' : '');
-      cBtn.innerHTML = isDone ? '<i class="ph-fill ph-check-circle"></i> Treino concluído!' : '<i class="ph ph-check-circle"></i> Marcar como concluído';
+      const cBtn = document.createElement('button'); cBtn.className = 'btn-complete';
+      cBtn.innerHTML = '<i class="ph ph-check-circle"></i> Marcar como concluído';
       
       cBtn.onclick = async () => {
         const v = !wd(tab.id);
@@ -432,6 +443,11 @@
              concluido: v
           })
         });
+        
+        if (v && currentProfile === 1) {
+          setTimeout(() => document.getElementById('gymratsModal').classList.add('open'), 150);
+        }
+        
         render();
       };
 
@@ -446,6 +462,7 @@
         list.appendChild(card);
       });
       p.appendChild(list);
+      syncWk(tab, cBtn);
 
       const rw = document.createElement('div'); rw.className = 'reset-wrap';
       const rb = document.createElement('button'); rb.className = 'btn-reset';
@@ -538,7 +555,7 @@
         if (now) card.classList.add('done');
         db.className = 'btn-done' + (now ? ' on' : '');
         db.textContent = now ? '✓ Feito' : 'Concluir';
-        syncWk(tab, cBtn); uprog();
+        syncWk(tab, cBtn, true); uprog();
       };
 
       const top = document.createElement('div'); top.className = 'ex-top';
@@ -572,7 +589,7 @@
 
           db.className = 'btn-done' + (all ? ' on' : '');
           db.textContent = all ? '✓ Feito' : 'Concluir';
-          syncWk(tab, cBtn); uprog();
+          syncWk(tab, cBtn, true); uprog();
         };
         const lbl = document.createElement('span'); lbl.className = 'set-lbl'; lbl.textContent = s.l;
         const det = document.createElement('span'); det.className = 'set-detail'; det.textContent = s.d;
@@ -581,12 +598,44 @@
       card.appendChild(sw); return card;
     }
 
-    function syncWk(tab, btn) {
+    function syncWk(tab, btn, isManual = false) {
       if (!btn) return;
-      const all = tab.ex.every(e => ed(tab.id, e.id, e.s.length));
+      
+      let totalEx = tab.ex.length;
+      let doneEx = tab.ex.filter(e => ed(tab.id, e.id, e.s.length)).length;
+      
+      const all = totalEx > 0 && doneEx === totalEx;
+      const half = totalEx > 0 && doneEx >= Math.ceil(totalEx / 2) && !all;
       const was = wd(tab.id);
-      if (all && !was) { swd(tab.id, true); btn.classList.add('done'); btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Treino concluído!'; sv() }
-      if (!all && was) { swd(tab.id, false); btn.classList.remove('done'); btn.innerHTML = '<i class="ph ph-check-circle"></i> Marcar como concluído'; sv() }
+
+      btn.classList.remove('done', 'half');
+      
+      if (all) {
+        btn.classList.add('done');
+        btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Treino concluído!';
+        if (!was) {
+          swd(tab.id, true);
+          sv();
+          if (currentProfile === 1 && isManual) {
+            setTimeout(() => {
+              document.getElementById('gymratsModal').classList.add('open');
+            }, 300);
+          }
+        }
+      } else if (half) {
+        btn.classList.add('half');
+        btn.innerHTML = '<i class="ph-fill ph-warning"></i> 50% Concluído';
+        if (was) {
+          swd(tab.id, false);
+          sv();
+        }
+      } else {
+        btn.innerHTML = '<i class="ph ph-check-circle"></i> Marcar como concluído';
+        if (was) {
+          swd(tab.id, false);
+          sv();
+        }
+      }
     }
 
     
