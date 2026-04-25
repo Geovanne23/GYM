@@ -262,7 +262,7 @@
           if (ed(tab.id, e.id, e.s.length)) exd++;
         })
       });
-      return { pct: t > 0 ? Math.round(d / t * 100) : 0, exd, totalEx, totalWk };
+      return { pct: totalEx > 0 ? Math.round((exd / totalEx) * 100) : 0, exd, totalEx, totalWk };
     }
     function uprog() {
       const { pct, exd, totalEx, totalWk } = prog();
