@@ -18,6 +18,19 @@
 
 <body>
 
+  <!-- SPLASH SCREEN -->
+  <div id="splashScreen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <i class="ph-fill ph-barbell"></i>
+      </div>
+      <h1 class="splash-title">
+        <span class="t-red">Além da</span><br>Genética
+      </h1>
+      <div class="splash-loader"></div>
+    </div>
+  </div>
+
   <div class="bg">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -102,16 +115,18 @@
     <div class="modal-card gymrats-card">
       <div class="gymrats-icon">💪</div>
       <h2 class="gymrats-title">Treino Finalizado!</h2>
-      <p class="gymrats-msg">Você destruiu mais um treino. <br><br>Não esqueça de postar a foto do shape no <strong>GymRats</strong> para manter a disciplina!</p>
+      <p class="gymrats-msg">Você destruiu mais um treino. <br><br>Não esqueça de postar a foto do shape no
+        <strong>GymRats</strong> para manter a disciplina!</p>
       <div class="modal-btns">
-        <button class="modal-btn btn-confirm gymrats-btn" onclick="document.getElementById('gymratsModal').classList.remove('open')">Bora pra cima!</button>
+        <button class="modal-btn btn-confirm gymrats-btn"
+          onclick="document.getElementById('gymratsModal').classList.remove('open')">Bora pra cima!</button>
       </div>
     </div>
   </div>
 
   <script>
     let currentProfile = 1;
-    
+
 
     const profilesMeta = {
       1: {
@@ -131,7 +146,7 @@
       }
     };
 
-    
+
     async function switchProfile(p) {
       currentProfile = p;
       document.body.classList.toggle('theme-emagrecimento', p === 2);
@@ -149,11 +164,11 @@
       // Buscar os dados do banco de dados (API)
       const res = await fetch('/api/data?perfil_id=' + p);
       D = await res.json();
-      
+
       // Buscar o progresso
       const pRes = await fetch('/api/progress?perfil_id=' + p);
       const rows = await pRes.json();
-      
+
       st = {};
       rows.forEach(r => {
         st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
@@ -161,7 +176,7 @@
 
       // Também buscar treinos concluídos inteiros, se houver
       // Para simular wd() (workout done), iteramos todos e vemos se o treino tá todo marcado.
-      
+
       act = 'semana';
       renderTabs();
       render();
@@ -197,16 +212,16 @@
       ]
     };
 
-    
 
-    
+
+
     let D = [];
     function getD() { return D; }
 
 
     /* ============================================ STATE ============================================ */
     const $t = document.getElementById('tabs'), $m = document.getElementById('content'), $md = document.getElementById('modal');
-    
+
     let act = 'semana', st = {}, mCb = null;
 
 
@@ -215,16 +230,16 @@
     $md.onclick = e => { if (e.target === $md) { $md.classList.remove('open'); mCb = null } };
     function ask(msg, cb) { document.getElementById('mMsg').textContent = msg; mCb = cb; $md.classList.add('open') }
 
-    
+
     function k(a, b, c) { return a + '|' + b + '|' + c }
     function gc(a, b, c) { return !!st[k(a, b, c)] }
-    
-    function sc(a, b, c, v) { 
-      st[k(a, b, c)] = v; 
+
+    function sc(a, b, c, v) {
+      st[k(a, b, c)] = v;
       // Salvar no servidor em background
       fetch('/api/progress', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           perfilId: currentProfile,
           treinoId: a,
@@ -234,8 +249,8 @@
         })
       }).catch(e => console.error(e));
     }
-    
-    function sv() {} // Fake sv since we auto-save via fetch
+
+    function sv() { } // Fake sv since we auto-save via fetch
 
     function ed(tid, eid, len) { for (let i = 0; i < len; i++)if (!gc(tid, eid, i)) return false; return len > 0 }
     function wd(tid) { return !!st[tid + '_d'] }
@@ -292,16 +307,16 @@
       tr.className = 'tab tab-trash';
       tr.innerHTML = '<i class="ph ph-trash"></i>';
       tr.title = 'Zerar tudo';
-      
-      tr.onclick = () => ask('Zerar TODO o progresso? Não pode ser desfeito.', async () => { 
-        st = {}; 
+
+      tr.onclick = () => ask('Zerar TODO o progresso? Não pode ser desfeito.', async () => {
+        st = {};
         await fetch('/api/progress/all', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ perfilId: currentProfile })
         });
-        render(); 
-        uprog(); 
+        render();
+        uprog();
       });
 
       $t.appendChild(tr);
@@ -427,27 +442,27 @@
 
       const cBtn = document.createElement('button'); cBtn.className = 'btn-complete';
       cBtn.innerHTML = '<i class="ph ph-check-circle"></i> Marcar como concluído';
-      
+
       cBtn.onclick = async () => {
         const v = !wd(tab.id);
         tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = v; }));
-        swd(tab.id, v); 
-        
+        swd(tab.id, v);
+
         await fetch('/api/progress/workout', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-             perfilId: currentProfile,
-             treinoId: tab.id,
-             exercicios: tab.ex.map(e => ({id: e.id, numSets: e.s.length})),
-             concluido: v
+            perfilId: currentProfile,
+            treinoId: tab.id,
+            exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
+            concluido: v
           })
         });
-        
+
         if (v && currentProfile === 1) {
           setTimeout(() => document.getElementById('gymratsModal').classList.add('open'), 150);
         }
-        
+
         render();
       };
 
@@ -467,19 +482,19 @@
       const rw = document.createElement('div'); rw.className = 'reset-wrap';
       const rb = document.createElement('button'); rb.className = 'btn-reset';
       rb.innerHTML = '<i class="ph ph-arrow-counter-clockwise"></i> Zerar treino';
-      
+
       rb.onclick = () => ask('Zerar o progresso deste treino?', async () => {
         tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = false; }));
-        swd(tab.id, false); 
-        
+        swd(tab.id, false);
+
         await fetch('/api/progress/workout', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-             perfilId: currentProfile,
-             treinoId: tab.id,
-             exercicios: tab.ex.map(e => ({id: e.id, numSets: e.s.length})),
-             concluido: false
+            perfilId: currentProfile,
+            treinoId: tab.id,
+            exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
+            concluido: false
           })
         });
         render();
@@ -600,16 +615,16 @@
 
     function syncWk(tab, btn, isManual = false) {
       if (!btn) return;
-      
+
       let totalEx = tab.ex.length;
       let doneEx = tab.ex.filter(e => ed(tab.id, e.id, e.s.length)).length;
-      
+
       const all = totalEx > 0 && doneEx === totalEx;
       const half = totalEx > 0 && doneEx >= Math.ceil(totalEx / 2) && !all;
       const was = wd(tab.id);
 
       btn.classList.remove('done', 'half');
-      
+
       if (all) {
         btn.classList.add('done');
         btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Treino concluído!';
@@ -638,8 +653,19 @@
       }
     }
 
-    
+
     switchProfile(1);
+
+    // Splash Screen Logic
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splashScreen');
+      if (splash) {
+        setTimeout(() => {
+          splash.classList.add('hide');
+          setTimeout(() => { splash.style.display = 'none'; }, 600);
+        }, 1200);
+      }
+    });
 
   </script>
 </body>
