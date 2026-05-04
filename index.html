@@ -11,9 +11,9 @@
   <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json" />
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="img/favicon.png" />
-  <link rel="apple-touch-icon" href="img/favicon.png" />
+  <!-- Favicon / App Icon -->
+  <link rel="icon" type="image/png" href="img/icon.png" />
+  <link rel="apple-touch-icon" href="img/icon.png" />
 
   <!-- iOS PWA: Splash screen nativa escura (evita tela branca) -->
   <!-- iPhone 15 Pro Max / 14 Pro Max -->
@@ -59,9 +59,6 @@
 
   <!-- SPLASH SCREEN -->
   <div id="splashScreen" class="splash-screen">
-    <!-- Ripple container -->
-    <div class="splash-ripple-container" id="splashRipple"></div>
-
     <div class="splash-content" id="splashContent">
       <div class="splash-logo" id="splashLogo">
         <i class="ph-fill ph-barbell"></i>
@@ -71,7 +68,6 @@
       </h1>
       <p class="splash-subtitle">Treino &amp; Evolução</p>
       <div class="splash-loader" id="splashLoader"></div>
-      <p class="splash-tap-hint" id="splashTapHint">Toque para entrar</p>
     </div>
   </div>
 
@@ -701,79 +697,26 @@
     switchProfile(1);
 
     // ============================================================
-    // SPLASH SCREEN — Animação de toque
+    // SPLASH SCREEN — Entra automático após 1.5s com animação
     // ============================================================
     window.addEventListener('load', () => {
-      const splash    = document.getElementById('splashScreen');
-      const logo      = document.getElementById('splashLogo');
-      const content   = document.getElementById('splashContent');
-      const loader    = document.getElementById('splashLoader');
-      const tapHint   = document.getElementById('splashTapHint');
-      const rippleCt  = document.getElementById('splashRipple');
+      const splash  = document.getElementById('splashScreen');
+      const content = document.getElementById('splashContent');
       if (!splash) return;
 
-      let dismissed = false;
-
-      // Mostrar o hint depois que o loader aparecer
       setTimeout(() => {
-        if (loader)   loader.style.display = 'none';
-        if (tapHint)  tapHint.classList.add('visible');
-      }, 1200);
-
-      // Auto-dismiss sem toque após 4s
-      const autoDismiss = setTimeout(() => dismiss(), 4000);
-
-      function createRipple(x, y) {
-        const r = document.createElement('div');
-        r.className = 'splash-ripple';
-        r.style.left = x + 'px';
-        r.style.top  = y + 'px';
-        rippleCt.appendChild(r);
-        setTimeout(() => r.remove(), 900);
-      }
-
-      function dismiss(x, y) {
-        if (dismissed) return;
-        dismissed = true;
-        clearTimeout(autoDismiss);
-
-        const cx = x ?? splash.offsetWidth  / 2;
-        const cy = y ?? splash.offsetHeight / 2;
-
-        // 1. Ripple na posição do toque
-        createRipple(cx, cy);
-
-        // 2. Ícone escala e some
-        if (logo) {
-          logo.style.transition = 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease';
-          logo.style.transform  = 'scale(1.35)';
-          logo.style.opacity    = '0';
-        }
-
-        // 3. Conteúdo some
+        // Contúedo some com scale down + fade
         if (content) {
-          content.style.transition = 'transform 0.4s ease, opacity 0.35s ease';
-          content.style.transform  = 'scale(0.9)';
+          content.style.transition = 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease';
+          content.style.transform  = 'scale(0.85) translateY(-10px)';
           content.style.opacity    = '0';
         }
-
-        // 4. Flash branco-vermelho cobre a tela
-        const flash = document.createElement('div');
-        flash.className = 'splash-flash';
-        splash.appendChild(flash);
-        setTimeout(() => flash.classList.add('go'), 50);
-
-        // 5. Splash some
+        // Splash some
         setTimeout(() => {
           splash.classList.add('hide');
           setTimeout(() => splash.style.display = 'none', 700);
-        }, 350);
-      }
-
-      // Toque / click
-      splash.addEventListener('pointerdown', (e) => {
-        dismiss(e.clientX, e.clientY);
-      });
+        }, 300);
+      }, 1500);
     });
 
   </script>
