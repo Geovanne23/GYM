@@ -228,6 +228,29 @@ const perfis = [
   { id: 3, nome: 'Matheus', data: D3 }
 ];
 
+const dietas = [
+  // Geovanne (Perfil 1)
+  { perfil_id: 1, refeicao: 'Café da Manhã', ingredientes: '2 ovos mexidos, 1 copo de leite, 1 pão francês', proteina: '~20 g' },
+  { perfil_id: 1, refeicao: 'Almoço', ingredientes: '100g frango grelhado, 2 colheres arroz, 1 concha feijão, Salada', proteina: '~33 g' },
+  { perfil_id: 1, refeicao: 'Lanche da Tarde', ingredientes: '1 iogurte natural, 1 banana, 2 colheres de aveia', proteina: '~10 g' },
+  { perfil_id: 1, refeicao: 'Jantar', ingredientes: '100g carne (ou frango), Arroz + feijão', proteina: '~25 g' },
+  { perfil_id: 1, refeicao: 'Ceia (Opcional)', ingredientes: '1 copo de leite OU 1 ovo cozido', proteina: '6–8 g' },
+
+  // Janaina (Perfil 2)
+  { perfil_id: 2, refeicao: 'Café da Manhã', ingredientes: '2 ovos mexidos, 1 fruta (maçã/mamão), Café sem açúcar', proteina: '~14 g' },
+  { perfil_id: 2, refeicao: 'Almoço', ingredientes: '120g peito de frango/peixe, 1 colher arroz integral, salada abundante e legumes', proteina: '~36 g' },
+  { perfil_id: 2, refeicao: 'Lanche da Tarde', ingredientes: '1 copo de iogurte desnatado, 10g de castanhas ou nozes', proteina: '~8 g' },
+  { perfil_id: 2, refeicao: 'Jantar', ingredientes: 'Omelete de 3 ovos com espinafre e tomate, Salada de folhas verdes', proteina: '~20 g' },
+  { perfil_id: 2, refeicao: 'Ceia (Opcional)', ingredientes: 'Chá de camomila/hortelã + 1 fatia fina de queijo minas', proteina: '5-6 g' },
+
+  // Matheus (Perfil 3)
+  { perfil_id: 3, refeicao: 'Café da Manhã', ingredientes: '3 ovos mexidos, 2 fatias de pão integral, 1 copo de suco de uva integral', proteina: '~25 g' },
+  { perfil_id: 3, refeicao: 'Almoço', ingredientes: '150g de patinho moído/frango grelhado, 4 colheres arroz, 1 concha de feijão, legumes', proteina: '~45 g' },
+  { perfil_id: 3, refeicao: 'Lanche da Tarde', ingredientes: 'Vitamina com 30g de Whey, 1 banana, 30g aveia, 200ml de leite', proteina: '~35 g' },
+  { perfil_id: 3, refeicao: 'Jantar', ingredientes: '150g de peito de frango, 150g de purê de batata doce ou arroz integral', proteina: '~40 g' },
+  { perfil_id: 3, refeicao: 'Ceia', ingredientes: '1 copo de iogurte grego natural ou 40g de queijo coalho grelhado', proteina: '~12 g' }
+];
+
 async function seed() {
   await initDB();
 
@@ -236,6 +259,7 @@ async function seed() {
       db.run('DELETE FROM semana');
       db.run('DELETE FROM treinos');
       db.run('DELETE FROM exercicios');
+      db.run('DELETE FROM dieta');
       db.run('DELETE FROM perfis', resolve);
     });
   });
@@ -247,6 +271,13 @@ async function seed() {
       stmtPerfil.run(p.id, p.nome);
     }
     stmtPerfil.finalize();
+
+    // Inserir dieta
+    const stmtDieta = db.prepare('INSERT INTO dieta (perfil_id, refeicao, ingredientes, proteina) VALUES (?, ?, ?, ?)');
+    for (const d of dietas) {
+      stmtDieta.run(d.perfil_id, d.refeicao, d.ingredientes, d.proteina);
+    }
+    stmtDieta.finalize();
 
     // Inserir dados
     const stmtTreino = db.prepare('INSERT OR IGNORE INTO treinos (id, perfil_id, title, sub, alert) VALUES (?, ?, ?, ?, ?)');

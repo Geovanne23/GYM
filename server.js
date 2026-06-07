@@ -311,20 +311,35 @@ function handleApi(req, res) {
        try {
          const { perfilId, treinoId, exercicios, concluido } = JSON.parse(body);
          
-         const stmt = db.prepare(`INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido) 
-                VALUES (?, ?, ?, ?, ?) 
-                ON CONFLICT(perfil_id, treino_id, exercicio_id, serie_index) 
-                DO UPDATE SET concluido = excluded.concluido`);
-                
-         for (const ex of exercicios) {
-           for (let i = 0; i < ex.numSets; i++) {
-             stmt.run(perfilId, treinoId, ex.id, i, concluido ? 1 : 0);
+         // Use serialize to ensure all operations complete before responding
+         db.serialize(() => {
+           db.run("BEGIN TRANSACTION");
+           // Upsert all exercise sets for this workout
+           for (const ex of exercicios) {
+             for (let i = 0; i < ex.numSets; i++) {
+               db.run(
+                 `INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido) 
+                  VALUES (?, ?, ?, ?, ?) 
+                  ON CONFLICT(perfil_id, treino_id, exercicio_id, serie_index) 
+                  DO UPDATE SET concluido = excluded.concluido`,
+                 [perfilId, treinoId, ex.id, i, concluido ? 1 : 0]
+               );
+             }
            }
-         }
-         stmt.finalize();
-         res.writeHead(200); res.end(JSON.stringify({success: true}));
+           
+           db.run("COMMIT", (err) => {
+             if (err) {
+               res.writeHead(500);
+               return res.end(JSON.stringify({error: err.message}));
+             }
+             res.writeHead(200);
+             res.end(JSON.stringify({success: true}));
+           });
+         });
        } catch (e) {
-         res.writeHead(400); res.end(JSON.stringify({error: 'Invalid JSON'}));
+         console.error('Error in /api/progress/workout:', e);
+         res.writeHead(400);
+         res.end(JSON.stringify({error: e.message || 'Invalid JSON'}));
        }
      });
      return;
@@ -336,9 +351,12 @@ function handleApi(req, res) {
      req.on('end', () => {
        try {
          const { perfilId } = JSON.parse(body);
-         db.run('DELETE FROM progresso WHERE perfil_id = ?', [perfilId], (err) => {
-           if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
-           res.writeHead(200); res.end(JSON.stringify({success: true}));
+         db.serialize(() => {
+           db.run('DELETE FROM progresso WHERE perfil_id = ?', [perfilId]);
+           db.run('DELETE FROM notas_exercicio WHERE perfil_id = ?', [perfilId], (err) => {
+             if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+             res.writeHead(200); res.end(JSON.stringify({success: true}));
+           });
          });
        } catch (e) {
          res.writeHead(400); res.end(JSON.stringify({error: 'Invalid JSON'}));
@@ -346,6 +364,91 @@ function handleApi(req, res) {
      });
      return;
   }
+
+  if (pathname === '/api/progress/reset' && req.method === 'POST') {
+     let body = '';
+     req.on('data', chunk => body += chunk.toString());
+     req.on('end', () => {
+       try {
+         const { perfilId, treinoId, exercicios } = JSON.parse(body);
+         
+         // Reset progress to false WITHOUT deleting from logs_treino (keeps history)
+         db.serialize(() => {
+           db.run("BEGIN TRANSACTION");
+           for (const ex of exercicios) {
+             for (let i = 0; i < ex.numSets; i++) {
+               db.run(
+                 `INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido) 
+                  VALUES (?, ?, ?, ?, 0) 
+                  ON CONFLICT(perfil_id, treino_id, exercicio_id, serie_index) 
+                  DO UPDATE SET concluido = 0`,
+                 [perfilId, treinoId, ex.id, i]
+               );
+             }
+           }
+           
+           db.run("COMMIT", (err) => {
+             if (err) {
+               res.writeHead(500);
+               return res.end(JSON.stringify({error: err.message}));
+             }
+             res.writeHead(200);
+             res.end(JSON.stringify({success: true, reset: true}));
+           });
+         });
+       } catch (e) {
+         console.error('Error in /api/progress/reset:', e);
+         res.writeHead(400);
+         res.end(JSON.stringify({error: e.message || 'Invalid JSON'}));
+       }
+     });
+     return;
+  }
+
+  if (pathname === '/api/diet' && req.method === 'GET') {
+    const perfilId = urlParams.searchParams.get('perfil_id');
+    if (!perfilId) { res.writeHead(400); return res.end(JSON.stringify({error: 'perfil_id required'})); }
+    db.all('SELECT * FROM dieta WHERE perfil_id = ? ORDER BY id ASC', [perfilId], (err, rows) => {
+      if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+      res.writeHead(200); res.end(JSON.stringify(rows));
+    });
+    return;
+  }
+
+  if (pathname === '/api/notes' && req.method === 'GET') {
+    const perfilId = urlParams.searchParams.get('perfil_id');
+    if (!perfilId) { res.writeHead(400); return res.end(JSON.stringify({error: 'perfil_id required'})); }
+    db.all('SELECT * FROM notas_exercicio WHERE perfil_id = ?', [perfilId], (err, rows) => {
+      if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+      res.writeHead(200); res.end(JSON.stringify(rows));
+    });
+    return;
+  }
+
+  if (pathname === '/api/notes' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk.toString());
+    req.on('end', () => {
+      try {
+        const { perfilId, exercicioId, treinoId, nota } = JSON.parse(body);
+        db.run(`INSERT INTO notas_exercicio (perfil_id, exercicio_id, treino_id, nota) 
+                VALUES (?, ?, ?, ?) 
+                ON CONFLICT(perfil_id, exercicio_id, treino_id) 
+                DO UPDATE SET nota = excluded.nota`,
+          [perfilId, exercicioId, treinoId, nota],
+          function(err) {
+            if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
+            res.writeHead(200); res.end(JSON.stringify({success: true}));
+          }
+        );
+      } catch (e) {
+        res.writeHead(400); res.end(JSON.stringify({error: 'Invalid JSON'}));
+      }
+    });
+    return;
+  }
+
+
 
   res.writeHead(404);
   res.end(JSON.stringify({error: 'Not found'}));

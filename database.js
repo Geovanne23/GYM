@@ -63,6 +63,26 @@ function initDB() {
         concluido BOOLEAN DEFAULT 0,
         PRIMARY KEY (perfil_id, treino_id, exercicio_id, serie_index),
         FOREIGN KEY(perfil_id) REFERENCES perfis(id)
+      )`);
+
+      // Tabela de dieta
+      db.run(`CREATE TABLE IF NOT EXISTS dieta (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        perfil_id INTEGER,
+        refeicao TEXT NOT NULL,
+        ingredientes TEXT NOT NULL,
+        proteina TEXT,
+        FOREIGN KEY(perfil_id) REFERENCES perfis(id)
+      )`);
+
+      // Tabela de notas/cargas de exercício
+      db.run(`CREATE TABLE IF NOT EXISTS notas_exercicio (
+        perfil_id INTEGER,
+        exercicio_id TEXT NOT NULL,
+        treino_id TEXT NOT NULL,
+        nota TEXT,
+        PRIMARY KEY (perfil_id, exercicio_id, treino_id),
+        FOREIGN KEY(perfil_id) REFERENCES perfis(id)
       )`, (err) => {
         if (err) reject(err);
         else resolve();

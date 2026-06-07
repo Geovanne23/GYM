@@ -50,7 +50,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -119,8 +119,7 @@
       </div>
     </header>
 
-    <!-- PERSISTENT DIET CARD (PROFILE 1) -->
-    <div id="dietCard" class="diet-wrap" style="display:none"></div>
+
 
     <nav id="tabs" class="tabs"></nav>
     <main id="content"></main>
@@ -136,6 +135,8 @@
       </div>
     </footer>
   </div>
+
+
 
   <!-- MODAL -->
   <div id="modal" class="modal-bg">
@@ -166,7 +167,11 @@
 
   <script>
     let currentProfile = 1;
-
+    let D = []; // Dados de treino do perfil ativo
+    let st = {}; // Estado de progresso (concluído ou não)
+    let notes = {}; // Notas de pesos/cargas de exercícios
+    let diet = []; // Dieta do perfil ativo
+    let act = 'semana'; // Sub-aba de treino ativa (ex: 'semana', 'treino-a')
 
     const profilesMeta = {
       1: {
@@ -186,45 +191,7 @@
       }
     };
 
-
-    async function switchProfile(p) {
-      currentProfile = p;
-      document.body.classList.toggle('theme-emagrecimento', p === 2);
-      document.body.classList.toggle('theme-abcd', p === 3);
-
-      document.getElementById('p1Btn').className = 'p-tab' + (p === 1 ? ' active' : '');
-      document.getElementById('p2Btn').className = 'p-tab' + (p === 2 ? ' active' : '');
-      document.getElementById('p3Btn').className = 'p-tab' + (p === 3 ? ' active' : '');
-
-      // Alterar os textos do cabeçalho
-      document.getElementById('hEyebrow').innerHTML = profilesMeta[p].eyebrow;
-      document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
-      document.getElementById('hDesc').innerHTML = profilesMeta[p].desc;
-
-      // Buscar os dados do banco de dados (API)
-      const res = await fetch('/api/data?perfil_id=' + p);
-      D = await res.json();
-
-      // Buscar o progresso
-      const pRes = await fetch('/api/progress?perfil_id=' + p);
-      const rows = await pRes.json();
-
-      st = {};
-      rows.forEach(r => {
-        st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
-      });
-
-      // Também buscar treinos concluídos inteiros, se houver
-      // Para simular wd() (workout done), iteramos todos e vemos se o treino tá todo marcado.
-
-      act = 'semana';
-      renderTabs();
-      render();
-      renderDietCard();
-    }
-
-
-    /* ---- icons for each day ---- */
+    /* ---- ícones para o plano semanal ---- */
     const dayIcons = {
       'Treino A': 'ph-fill ph-barbell',
       'Treino B': 'ph-fill ph-person-arms-spread',
@@ -235,48 +202,23 @@
       'Dieta': 'ph-fill ph-fork-knife'
     };
 
-    const dietData = {
-      header: 'Recomendação Nutricional',
-      sub: 'Meta: ~90g Proteína/dia (59kg Mant./Ganho)',
-      meals: [
-        { t: 'Café da Manhã', i: '2 ovos mexidos, 1 copo de leite, 1 pão francês', p: '~20 g' },
-        { t: 'Almoço', i: '100 g frango grelhado, 2 colheres arroz, 1 concha feijão, Salada', p: '~33 g' },
-        { t: 'Lanche da Tarde', i: '1 iogurte natural, 1 banana, 2 colheres de aveia', p: '~10 g' },
-        { t: 'Jantar', i: '100 g carne (ou frango), Arroz + feijão', p: '~25 g' },
-        { t: 'Ceia (Opcional)', i: '1 copo de leite OU 1 ovo cozido', p: '6–8 g' }
-      ],
-      tips: [
-        'Não precisa comer tudo perfeito todo dia — tenta manter próximo disso',
-        'Se quiser facilitar: whey ajuda, mas não é obrigatório',
-        'Água e sono fazem MUITA diferença no resultado'
-      ]
-    };
+    const $t = document.getElementById('tabs');
+    const $m = document.getElementById('content');
+    const $md = document.getElementById('modal');
+    let mCb = null;
 
-
-
-
-    let D = [];
-    function getD() { return D; }
-
-
-    /* ============================================ STATE ============================================ */
-    const $t = document.getElementById('tabs'), $m = document.getElementById('content'), $md = document.getElementById('modal');
-
-    let act = 'semana', st = {}, mCb = null;
-
-
+    // Confirmação de Modal
     document.getElementById('mNo').onclick = () => { $md.classList.remove('open'); mCb = null };
     document.getElementById('mYes').onclick = () => { $md.classList.remove('open'); if (mCb) { mCb(); mCb = null } };
     $md.onclick = e => { if (e.target === $md) { $md.classList.remove('open'); mCb = null } };
     function ask(msg, cb) { document.getElementById('mMsg').textContent = msg; mCb = cb; $md.classList.add('open') }
 
-
+    // Helpers de chave de progresso
     function k(a, b, c) { return a + '|' + b + '|' + c }
     function gc(a, b, c) { return !!st[k(a, b, c)] }
 
     function sc(a, b, c, v) {
       st[k(a, b, c)] = v;
-      // Salvar no servidor em background
       fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -290,25 +232,25 @@
       }).catch(e => console.error(e));
     }
 
-    function sv() { } // Fake sv since we auto-save via fetch
-
-    function ed(tid, eid, len) { for (let i = 0; i < len; i++)if (!gc(tid, eid, i)) return false; return len > 0 }
+    function ed(tid, eid, len) { for (let i = 0; i < len; i++) if (!gc(tid, eid, i)) return false; return len > 0 }
     function wd(tid) { return !!st[tid + '_d'] }
     function swd(tid, v) { st[tid + '_d'] = v }
 
+    // Tag parser
     function tags(t) {
       if (!t) return [];
       const r = [], lo = t.toLowerCase();
       if (lo.includes('rest')) { const m = t.match(/(\d+)\s*rest/i); r.push({ txt: (m ? m[1] + ' ' : '') + 'Rest-Pause', cls: 'tag-rest' }) }
       if (lo.includes('drop')) { const m = t.match(/(\d+)\s*drop/i); r.push({ txt: (m ? m[1] + ' ' : '') + 'Drop Set', cls: 'tag-drop' }) }
       if (lo.includes('pico')) { const m = t.match(/(\d+)s/i); r.push({ txt: (m ? m[1] + 's ' : '') + 'Pico', cls: 'tag-pico' }) }
-      if (r.length === 0) r.push({ txt: t, cls: 'tag-pico' }); // Fallback tag rendering
+      if (r.length === 0) r.push({ txt: t, cls: 'tag-pico' });
       return r;
     }
 
+    // Calcula progresso atual
     function prog() {
       let t = 0, d = 0, exd = 0, totalEx = 0, totalWk = 0;
-      getD().forEach(tab => {
+      D.forEach(tab => {
         if (!tab.ex) return;
         totalWk++;
         tab.ex.forEach(e => {
@@ -319,13 +261,22 @@
       });
       return { pct: totalEx > 0 ? Math.round((exd / totalEx) * 100) : 0, exd, totalEx, totalWk };
     }
+
     function uprog() {
       const { pct, exd, totalEx, totalWk } = prog();
-      const f = document.getElementById('pFill'), t = document.getElementById('pText'), s = document.getElementById('sDone');
-      const sw = document.getElementById('sWorkouts'), st2 = document.getElementById('sTotal');
-      if (f) f.style.width = pct + '%'; if (t) t.textContent = pct + '%'; if (s) s.textContent = exd;
-      if (sw) sw.textContent = totalWk; if (st2) st2.textContent = totalEx;
+      const f = document.getElementById('pFill');
+      const t = document.getElementById('pText');
+      const s = document.getElementById('sDone');
+      const sw = document.getElementById('sWorkouts');
+      const st2 = document.getElementById('sTotal');
+      
+      if (f) { f.style.width = pct + '%'; f.style.background = 'var(--accent-gradient)'; }
+      if (t) t.textContent = pct + '%';
+      if (s) s.textContent = exd;
+      if (sw) sw.textContent = totalWk;
+      if (st2) st2.textContent = totalEx;
     }
+
     function wid(plan) {
       const p = plan.toLowerCase();
       if (p.includes('treino a')) return 'treino-a'; if (p.includes('treino b')) return 'treino-b';
@@ -333,10 +284,53 @@
       if (p.includes('treino e')) return 'treino-e'; return null;
     }
 
-    /* ============================================ RENDER ============================================ */
+    // Alternar Perfil
+    async function switchProfile(p) {
+      currentProfile = p;
+      document.body.classList.toggle('theme-p1', p === 1);
+      document.body.classList.toggle('theme-emagrecimento', p === 2);
+      document.body.classList.toggle('theme-abcd', p === 3);
+
+      document.getElementById('p1Btn').className = 'p-tab' + (p === 1 ? ' active' : '');
+      document.getElementById('p2Btn').className = 'p-tab' + (p === 2 ? ' active' : '');
+      document.getElementById('p3Btn').className = 'p-tab' + (p === 3 ? ' active' : '');
+
+      document.getElementById('hEyebrow').innerHTML = profilesMeta[p].eyebrow;
+      document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
+      document.getElementById('hDesc').innerHTML = profilesMeta[p].desc;
+
+      // Carregar dados via API
+      try {
+        const [resData, resProg, resDiet, resNotes] = await Promise.all([
+          fetch('/api/data?perfil_id=' + p).then(r => r.json()),
+          fetch('/api/progress?perfil_id=' + p).then(r => r.json()),
+          fetch('/api/diet?perfil_id=' + p).then(r => r.json()),
+          fetch('/api/notes?perfil_id=' + p).then(r => r.json())
+        ]);
+
+        D = resData;
+        st = {};
+        resProg.forEach(r => {
+          st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
+        });
+        diet = resDiet;
+        notes = {};
+        resNotes.forEach(r => {
+          notes[r.exercicio_id] = r.nota;
+        });
+
+        act = 'semana';
+        $t.style.display = 'flex';
+        renderTabs();
+        render();
+      } catch (err) {
+        console.error("Erro ao carregar dados do perfil:", err);
+      }
+    }
+
     function renderTabs() {
       $t.innerHTML = '';
-      getD().forEach(tab => {
+      D.forEach(tab => {
         const b = document.createElement('button');
         b.className = 'tab' + (tab.id === act ? ' active' : '');
         b.textContent = tab.title;
@@ -348,30 +342,40 @@
       tr.innerHTML = '<i class="ph ph-trash"></i>';
       tr.title = 'Zerar tudo';
 
-      tr.onclick = () => ask('Zerar TODO o progresso? Não pode ser desfeito.', async () => {
-        st = {};
-        await fetch('/api/progress/all', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ perfilId: currentProfile })
-        });
-        render();
-        uprog();
+      tr.onclick = () => ask(`Zerar TODO o progresso de ${currentProfile === 1 ? 'Geovanne' : currentProfile === 2 ? 'Janaina' : 'Matheus'}? Não pode ser desfeito.`, async () => {
+        const profileBeingReset = currentProfile; // Captura o perfil no momento do clique
+        try {
+          await fetch('/api/progress/all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ perfilId: profileBeingReset })
+          });
+          // Só limpa o estado em memória se ainda estivermos no mesmo perfil
+          if (currentProfile === profileBeingReset) {
+            st = {};
+            notes = {};
+            render();
+            uprog();
+          }
+        } catch(e) {
+          console.error('Erro ao resetar perfil:', e);
+        }
       });
 
       $t.appendChild(tr);
     }
 
     function render() {
-      const tab = getD().find(t => t.id === act);
       $m.innerHTML = '';
+      uprog();
+
+      const tab = D.find(t => t.id === act);
       if (!tab) return;
       if (tab.type === 'week') rWeek(tab);
       else rWork(tab);
-      uprog();
     }
 
-    /* ============================================ WEEK ============================================ */
+    /* ============================================ WORKOUTS: WEEK VIEW ============================================ */
     function rWeek(tab) {
       const p = document.createElement('div'); p.className = 'panel';
 
@@ -385,7 +389,12 @@
         const rest = d.plan.toLowerCase().includes('descanso');
         const wi = wid(d.plan);
         let isDone = false;
-        if (wi) { const w = getD().find(t => t.id === wi); if (w && w.ex) isDone = w.ex.every(e => ed(wi, e.id, e.s.length)) }
+        if (wi) {
+          const w = D.find(t => t.id === wi);
+          if (w && w.ex) isDone = w.ex.every(e => ed(wi, e.id, e.s.length));
+
+
+        }
 
         const card = document.createElement('div');
         card.className = 'day-card reveal ' + `stagger-${(idx % 7) + 1}` + (rest ? ' rest' : '') + (isDone ? ' done' : '');
@@ -403,69 +412,63 @@
         const iconContent = isDone ? '✓' : `<i class="${iconCls}"></i>`;
 
         card.innerHTML = `
-      <div class="day-top">
-        <span class="day-label">${d.d}</span>
-        ${badge}
-      </div>
-      <div class="day-plan">${d.plan}</div>
-      <div class="day-sub">${d.sub}</div>
-      <div class="day-icon">${iconContent}</div>
-    `;
+          <div class="day-top">
+            <span class="day-label">${d.d}</span>
+            ${badge}
+          </div>
+          <div class="day-plan">${d.plan}</div>
+          <div class="day-sub">${d.sub}</div>
+          <div class="day-icon">${iconContent}</div>
+        `;
         g.appendChild(card);
       });
       p.appendChild(g);
 
       /* Legend */
+      const lg = document.createElement('div'); lg.className = 'legend';
       if (currentProfile === 1) {
-        const lg = document.createElement('div'); lg.className = 'legend';
         lg.innerHTML = `
-      <p class="legend-t">Técnicas Aplicadas</p>
-      <div class="legend-list">
-        <div class="legend-item"><span class="legend-dot lr"></span><strong>Rest-Pause</strong>10s de pausa na falha muscular</div>
-        <div class="legend-item"><span class="legend-dot lp"></span><strong>Drop Set</strong>Redução de carga sem descanso</div>
-        <div class="legend-item"><span class="legend-dot lc"></span><strong>Pico</strong>2s de squeeze na máxima tensão</div>
-      </div>
-    `;
-        p.appendChild(lg);
+          <p class="legend-t">Técnicas Aplicadas</p>
+          <div class="legend-list">
+            <div class="legend-item"><span class="legend-dot lr"></span><strong>Rest-Pause</strong>10s de pausa na falha muscular</div>
+            <div class="legend-item"><span class="legend-dot lp"></span><strong>Drop Set</strong>Redução de carga sem descanso</div>
+            <div class="legend-item"><span class="legend-dot lc"></span><strong>Pico</strong>2s de squeeze na máxima tensão</div>
+          </div>
+        `;
       } else if (currentProfile === 2) {
-        const lg = document.createElement('div'); lg.className = 'legend';
         lg.innerHTML = `
-      <p class="legend-t" style="color: var(--orange)">Padrão de Execução</p>
-      <div class="legend-list" style="margin-bottom: 18px;">
-        <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Descanso</strong>30–60s (até 90s em ex. pesados)</div>
-        <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Controle e Progressão</strong>Execução controlada (principalmente na descida). Última série próxima da falha. Progressão de carga semanal.</div>
-      </div>
-
-      <p class="legend-t" style="color: var(--red)">Observações Mounjaro</p>
-      <div class="legend-list">
-        <div class="legend-item"><span class="legend-dot lr"></span><strong>Alimentação</strong>Evitar treino pesado em jejum. Consumir proteína leve antes do treino.</div>
-        <div class="legend-item"><span class="legend-dot lr"></span><strong>Atenção</strong>Ajustar intensidade se houver fraqueza e priorizar hidratação.</div>
-      </div>
-    `;
-        p.appendChild(lg);
-      } else if (currentProfile === 3) {
-        const lg = document.createElement('div'); lg.className = 'legend';
+          <p class="legend-t" style="color: var(--orange)">Padrão de Execução</p>
+          <div class="legend-list" style="margin-bottom: 18px;">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Descanso</strong>30–60s (até 90s em ex. pesados)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--orange); box-shadow:0 0 6px rgba(255,107,53,0.5)"></span><strong>Controle</strong>Execução controlada (foco na descida). Última série próxima à falha.</div>
+          </div>
+          <p class="legend-t" style="color: var(--red)">Observações Mounjaro</p>
+          <div class="legend-list">
+            <div class="legend-item"><span class="legend-dot lr"></span><strong>Alimentação</strong>Não treinar pesado em jejum completo. Proteína leve antes.</div>
+            <div class="legend-item"><span class="legend-dot lr"></span><strong>Hidratação</strong>Essencial manter o consumo alto de água durante o treino.</div>
+          </div>
+        `;
+      } else {
         lg.innerHTML = `
-      <p class="legend-t" style="color: #ffffff; text-shadow: 0 0 5px rgba(255,255,255,0.2)">Divisão Muscular — Estilo SCCP</p>
-      <div class="legend-list" style="margin-bottom: 18px;">
-        <div class="legend-item"><span class="legend-dot" style="background:#000000; border: 1px solid #ffffff; box-shadow:0 0 6px rgba(255,255,255,0.1)"></span><strong>Treino A</strong>Dorsais (Costas) + Abdominal Supra</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#ffffff; box-shadow:0 0 6px rgba(255,255,255,0.3)"></span><strong>Treino B</strong>Coxas, Glúteos e Panturrilha</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#888888; box-shadow:0 0 6px rgba(255,255,255,0.1)"></span><strong>Treino C</strong>Peitoral + Deltoide/Trapézio + Abd Infra</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#e63946; box-shadow:0 0 6px rgba(230,57,70,0.3)"></span><strong>Treino D</strong>Bíceps/Antebraço + Tríceps</div>
-      </div>
-
-      <p class="legend-t" style="color: var(--red)">Observação Premium</p>
-      <div class="legend-list">
-        <div class="legend-item"><span class="legend-dot lr"></span><strong>Ciclo contínuo</strong>A → B → C → D → repetir. Sem dia fixo na semana.</div>
-        <div class="legend-item"><span class="legend-dot lr"></span><strong>VAI CORINTHIANS!</strong>Siga o plano com garra e disciplina de campeão.</div>
-      </div>
-    `;
-        p.appendChild(lg);
+          <p class="legend-t" style="color: #ffffff; text-shadow: 0 0 5px rgba(255,255,255,0.2)">Divisão Muscular — SCCP</p>
+          <div class="legend-list" style="margin-bottom: 18px;">
+            <div class="legend-item"><span class="legend-dot" style="background:#000000; border: 1px solid #ffffff; box-shadow:0 0 6px rgba(255,255,255,0.1)"></span><strong>Treino A</strong>Dorsais + Abdominal Supra</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#ffffff; box-shadow:0 0 6px rgba(255,255,255,0.3)"></span><strong>Treino B</strong>Membros Inferiores (Foco posterior/glúteo)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#888888; box-shadow:0 0 6px rgba(255,255,255,0.1)"></span><strong>Treino C</strong>Peito + Deltoides/Trapézio + Abd Infra</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#e63946; box-shadow:0 0 6px rgba(230,57,70,0.3)"></span><strong>Treino D</strong>Bíceps/Antebraço + Tríceps</div>
+          </div>
+          <p class="legend-t" style="color: var(--red)">Fidelidade e Garra</p>
+          <div class="legend-list">
+            <div class="legend-item"><span class="legend-dot lr"></span><strong>Sem dia fixo</strong>Ciclo contínuo. Terminou o D, no dia seguinte começa o A.</div>
+            <div class="legend-item"><span class="legend-dot lr"></span><strong>VAI CORINTHIANS!</strong>Disciplina de campeão em todas as séries.</div>
+          </div>
+        `;
       }
+      p.appendChild(lg);
       $m.appendChild(p);
     }
 
-    /* ============================================ WORKOUT ============================================ */
+    /* ============================================ WORKOUTS: ACTIVE WORKOUT ============================================ */
     function rWork(tab) {
       const p = document.createElement('div'); p.className = 'panel';
 
@@ -488,22 +491,36 @@
         tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = v; }));
         swd(tab.id, v);
 
-        await fetch('/api/progress/workout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            perfilId: currentProfile,
-            treinoId: tab.id,
-            exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
-            concluido: v
-          })
-        });
+        try {
+          // Chamar backend para salvar progressão de exercícios
+          const saveRes = await fetch('/api/progress/workout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              perfilId: currentProfile,
+              treinoId: tab.id,
+              exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
+              concluido: v
+            })
+          });
+          
+          if (!saveRes.ok) {
+            console.error('Erro ao salvar progresso:', saveRes.statusText);
+            throw new Error('Falha ao salvar');
+          }
 
-        if (v && currentProfile === 1) {
-          setTimeout(() => document.getElementById('gymratsModal').classList.add('open'), 150);
+          // Renderizar o treino atual atualizado
+          renderTabs();
+          render();
+          uprog();
+        } catch (err) {
+          console.error('Erro ao marcar treino como concluído:', err);
+          alert('Erro ao salvar progresso. Tente novamente.');
+          // Reverter mudanças se falhar
+          const revV = !v;
+          tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = revV; }));
+          swd(tab.id, revV);
         }
-
-        render();
       };
 
       hd.appendChild(cBtn);
@@ -527,67 +544,40 @@
         tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = false; }));
         swd(tab.id, false);
 
-        await fetch('/api/progress/workout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            perfilId: currentProfile,
-            treinoId: tab.id,
-            exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
-            concluido: false
-          })
-        });
-        render();
+        try {
+          // Use separate reset endpoint that doesn't touch logs_treino (history)
+          const resetRes = await fetch('/api/progress/reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              perfilId: currentProfile,
+              treinoId: tab.id,
+              exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length }))
+            })
+          });
+
+          if (!resetRes.ok) throw new Error('Falha ao resetar');
+
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          // Just update the current view
+          renderTabs();
+          render();
+          uprog();
+        } catch (err) {
+          console.error('Erro ao resetar treino:', err);
+          alert('Erro ao resetar progresso.');
+          // Reverter mudanças se falhar
+          tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = true; }));
+          swd(tab.id, true);
+        }
       });
 
       rw.appendChild(rb); p.appendChild(rw);
       $m.appendChild(p);
     }
 
-    /* ============================================ DIET PERSISTENT ============================================ */
-    let dietOpen = false;
-    function renderDietCard() {
-      const el = document.getElementById('dietCard');
-      if (currentProfile !== 1) { el.style.display = 'none'; return; }
-      el.style.display = 'block';
-
-      el.innerHTML = `
-        <div class="diet-card-main">
-          <div class="diet-header" onclick="toggleDiet()">
-            <div class="diet-titles">
-              <span class="diet-eyebrow">Plano Alimentar</span>
-              <h3 class="diet-title">Recomendação de Dieta</h3>
-            </div>
-            <i class="ph ph-caret-${dietOpen ? 'up' : 'down'} diet-arrow"></i>
-          </div>
-          <div class="diet-collapsible ${dietOpen ? 'open' : ''}">
-            <div class="diet-content">
-              <div class="meal-list">
-                ${dietData.meals.map(m => `
-                  <div class="meal-item">
-                    <div class="meal-info">
-                      <span class="meal-time">${m.t}</span>
-                      <span class="meal-desc">${m.i}</span>
-                    </div>
-                    <span class="meal-prot">${m.p}</span>
-                  </div>
-                `).join('')}
-              </div>
-              <div class="diet-tips">
-                <p class="tips-title">💡 Dicas do Geovanne</p>
-                <ul>
-                  ${dietData.tips.map(t => `<li>${t}</li>`).join('')}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    window.toggleDiet = () => { dietOpen = !dietOpen; renderDietCard(); };
-
-    /* ============================================ CARD ============================================ */
+    // Gerador de Cards de Exercícios Expansíveis com Notas e Cargas
     function buildCard(tab, e, num, cBtn) {
       let doneCount = 0;
       e.s.forEach((_, i) => { if (gc(tab.id, e.id, i)) doneCount++; });
@@ -596,33 +586,48 @@
 
       const card = document.createElement('div');
       card.className = 'ex-card' + (done ? ' done' : (partial ? ' partial' : ''));
+      card.id = `ex-card-${e.id}`;
 
       const tgs = tags(e.t);
       const tgsH = tgs.length ? `<div class="tags">${tgs.map(t => `<span class="tag ${t.cls}">${t.txt}</span>`).join('')}</div>` : '';
 
+      const top = document.createElement('div'); top.className = 'ex-top';
+      const info = document.createElement('div'); info.className = 'ex-info';
+      
+      // Expander HTML
+      info.innerHTML = `
+        <div class="ex-top-inner">
+          <button class="ex-card-expand-btn" id="expand-btn-${e.id}" onclick="toggleExCardDetails('${e.id}')">
+            <i class="ph-bold ph-caret-down"></i>
+          </button>
+          <div class="ex-name" onclick="toggleExCardDetails('${e.id}')" style="cursor:pointer">${e.n}</div>
+        </div>
+        ${tgsH}
+      `;
+
       const db = document.createElement('button'); db.className = 'btn-done' + (done ? ' on' : '');
       db.textContent = done ? '✓ Feito' : 'Concluir';
+      
       db.onclick = () => {
         const now = !ed(tab.id, e.id, e.s.length);
-        e.s.forEach((_, i) => sc(tab.id, e.id, i, now)); sv();
+        e.s.forEach((_, i) => sc(tab.id, e.id, i, now));
         card.querySelectorAll('.cb').forEach(c => { c.checked = now });
         card.classList.remove('done', 'partial');
-        if (now) card.classList.add('done');
+        if (now) {
+          card.classList.add('done');
+        }
         db.className = 'btn-done' + (now ? ' on' : '');
         db.textContent = now ? '✓ Feito' : 'Concluir';
         syncWk(tab, cBtn, true); uprog();
       };
 
-      const top = document.createElement('div'); top.className = 'ex-top';
-      const info = document.createElement('div'); info.className = 'ex-info';
-      info.innerHTML = `<div class="ex-name">${e.n}</div>${tgsH}`;
       top.appendChild(info); top.appendChild(db); card.appendChild(top);
 
+      // Séries
       const sw = document.createElement('div'); sw.className = 'sets';
       e.s.forEach((s, i) => {
         const row = document.createElement('div'); row.className = 'set-row';
         row.onclick = (event) => {
-          // If the click wasn't directly on the checkbox, toggle it
           const cb = row.querySelector('.cb');
           if (event.target !== cb) {
             cb.checked = !cb.checked;
@@ -632,8 +637,9 @@
 
         const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'cb';
         cb.checked = gc(tab.id, e.id, i); cb.setAttribute('aria-label', s.l);
+        
         cb.onchange = () => {
-          sc(tab.id, e.id, i, cb.checked); sv();
+          sc(tab.id, e.id, i, cb.checked);
           const cbs = Array.from(card.querySelectorAll('.cb'));
           const count = cbs.filter(c => c.checked).length;
           const all = count === cbs.length;
@@ -644,14 +650,86 @@
 
           db.className = 'btn-done' + (all ? ' on' : '');
           db.textContent = all ? '✓ Feito' : 'Concluir';
+          
           syncWk(tab, cBtn, true); uprog();
         };
+
         const lbl = document.createElement('span'); lbl.className = 'set-lbl'; lbl.textContent = s.l;
         const det = document.createElement('span'); det.className = 'set-detail'; det.textContent = s.d;
         row.appendChild(cb); row.appendChild(lbl); row.appendChild(det); sw.appendChild(row);
       });
-      card.appendChild(sw); return card;
+      card.appendChild(sw);
+
+      // Área expansível para peso/cargas
+      const details = document.createElement('div');
+      details.className = 'ex-details';
+      details.id = `ex-details-${e.id}`;
+      details.style.display = 'none';
+
+      // Técnica avançada explicação
+      let techDesc = "";
+      if (e.t) {
+        const lo = e.t.toLowerCase();
+        if (lo.includes('rest')) techDesc = "Rest-Pause: Faça a série até a falha, descanse 10-15 segundos e faça mais repetições até a falha com a mesma carga.";
+        else if (lo.includes('drop')) techDesc = "Drop Set: Realize a série até a falha, reduza a carga em 20-30% imediatamente e continue até a falha.";
+        else if (lo.includes('pico')) techDesc = "Pico de contração: Segure a contração máxima do músculo por 2 segundos no ponto de maior esforço de cada repetição.";
+        else techDesc = `Técnica recomendada: ${e.t}`;
+      } else {
+        techDesc = "Foque na cadência: 2 segundos na subida (concêntrica) e 3 segundos na descida controlada (excêntrica).";
+      }
+
+      const exerciseNote = notes[e.id] || '';
+
+      details.innerHTML = `
+        <div class="ex-technique-info">
+          <i class="ph-bold ph-info" style="margin-right:6px"></i> ${techDesc}
+        </div>
+        <div class="ex-notes-area">
+          <span class="ex-notes-label">Cargas & Peso Realizado</span>
+          <input type="text" 
+                 class="ex-notes-field" 
+                 placeholder="Ex: 20kg - 10 reps / 25kg - 8 reps" 
+                 value="${exerciseNote}"
+                 id="note-${e.id}"
+                 onblur="saveNote('${e.id}', this.value)"
+                 onkeyup="if(event.key==='Enter') this.blur()" />
+        </div>
+      `;
+
+      card.appendChild(details);
+      return card;
     }
+
+    // Toggle de expansão de card de exercício
+    window.toggleExCardDetails = function(eid) {
+      const el = document.getElementById(`ex-details-${eid}`);
+      const btn = document.getElementById(`expand-btn-${eid}`);
+      if (!el) return;
+      if (el.style.display === 'none') {
+        el.style.display = 'flex';
+        btn.classList.add('rotated');
+      } else {
+        el.style.display = 'none';
+        btn.classList.remove('rotated');
+      }
+    };
+
+    // Salvar cargas/notas de exercícios no servidor
+    window.saveNote = function(eid, val) {
+      notes[eid] = val;
+      fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          perfilId: currentProfile,
+          exercicioId: eid,
+          treinoId: act,
+          nota: val
+        })
+      }).catch(e => console.error("Erro ao salvar anotação:", e));
+    };
+
+
 
     function syncWk(tab, btn, isManual = false) {
       if (!btn) return;
@@ -670,55 +748,261 @@
         btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Treino concluído!';
         if (!was) {
           swd(tab.id, true);
-          sv();
-          if (currentProfile === 1 && isManual) {
-            setTimeout(() => {
-              document.getElementById('gymratsModal').classList.add('open');
-            }, 300);
-          }
         }
       } else if (half) {
         btn.classList.add('half');
         btn.innerHTML = '<i class="ph-fill ph-warning"></i> 50% Concluído';
-        if (was) {
-          swd(tab.id, false);
-          sv();
-        }
+        if (was) swd(tab.id, false);
       } else {
         btn.innerHTML = '<i class="ph ph-check-circle"></i> Marcar como concluído';
-        if (was) {
-          swd(tab.id, false);
-          sv();
-        }
+        if (was) swd(tab.id, false);
       }
     }
 
+    /* ============================================ DIET PLANNER: INTERACTIVE VIEW ============================================ */
+    function getTodayDietKey() {
+      const localDate = new Date().toISOString().slice(0, 10);
+      return `diet_checked_${currentProfile}_${localDate}`;
+    }
 
+    function loadDietCheckedState() {
+      try {
+        const raw = localStorage.getItem(getTodayDietKey());
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveDietCheckedState(stateObj) {
+      try {
+        localStorage.setItem(getTodayDietKey(), JSON.stringify(stateObj));
+      } catch {}
+    }
+
+    function isDietMealChecked(mealId) {
+      const s = loadDietCheckedState();
+      return !!s[mealId];
+    }
+
+    function toggleDietMeal(mealId) {
+      const s = loadDietCheckedState();
+      const newVal = !s[mealId];
+      s[mealId] = newVal;
+      saveDietCheckedState(s);
+
+      const itemEl = document.getElementById(`diet-item-${mealId}`);
+      const cbEl = document.getElementById(`diet-cb-${mealId}`);
+      if (itemEl) itemEl.classList.toggle('checked', newVal);
+      if (cbEl) cbEl.checked = newVal;
+
+      const allChecked = diet.every(m => isDietMealChecked(m.id));
+      if (allChecked && newVal) {
+        triggerConfetti();
+      }
+
+      uprog();
+      updateDietProgressTracker();
+    }
+
+    function getDietProgress() {
+      let consumed = 0;
+      let target = 0;
+
+      if (currentProfile === 1) target = 90;
+      else if (currentProfile === 2) target = 80;
+      else target = 120;
+
+      diet.forEach(m => {
+        const valStr = m.proteina || '';
+        const match = valStr.match(/(\d+)/);
+        if (match) {
+          const val = parseInt(match[1]);
+          if (isDietMealChecked(m.id)) consumed += val;
+        }
+      });
+      return { consumed, target };
+    }
+
+    function updateDietProgressTracker() {
+      const { consumed, target } = getDietProgress();
+      const fillEl = document.getElementById('dietViewProgFill');
+      const valEl = document.getElementById('dietViewProgVal');
+      const pct = target > 0 ? Math.round((consumed / target) * 100) : 0;
+
+      if (fillEl) fillEl.style.width = Math.min(pct, 100) + '%';
+      if (valEl) valEl.textContent = `${consumed}g / ${target}g (${pct}%)`;
+    }
+
+    function renderDietView() {
+      const p = document.createElement('div'); p.className = 'panel diet-panel';
+
+      const hd = document.createElement('div'); hd.className = 'week-head';
+      hd.innerHTML = `<h2 class="week-title">Plano Alimentar Diário</h2>`;
+      p.appendChild(hd);
+
+      const { consumed, target } = getDietProgress();
+      const pct = target > 0 ? Math.round((consumed / target) * 100) : 0;
+
+      const progSection = document.createElement('div');
+      progSection.className = 'diet-prog-section';
+      progSection.innerHTML = `
+        <div class="diet-prog-info">
+          <span class="diet-prog-title">Proteína Consumida hoje</span>
+          <span id="dietViewProgVal" class="diet-prog-val">${consumed}g / ${target}g (${pct}%)</span>
+        </div>
+        <div class="diet-prog-track">
+          <div id="dietViewProgFill" class="diet-prog-fill" style="width: ${Math.min(pct, 100)}%"></div>
+        </div>
+      `;
+      p.appendChild(progSection);
+
+      const list = document.createElement('div');
+      list.className = 'diet-list';
+
+      diet.forEach(m => {
+        const isChecked = isDietMealChecked(m.id);
+        const item = document.createElement('div');
+        item.className = 'diet-item' + (isChecked ? ' checked' : '');
+        item.id = `diet-item-${m.id}`;
+        item.onclick = () => toggleDietMeal(m.id);
+
+        item.innerHTML = `
+          <input type="checkbox" 
+                 class="diet-item-cb" 
+                 id="diet-cb-${m.id}" 
+                 ${isChecked ? 'checked' : ''} 
+                 onclick="event.stopPropagation(); toggleDietMeal(${m.id})" />
+          <div class="diet-item-details">
+            <span class="diet-item-time">${m.refeicao}</span>
+            <span class="diet-item-desc">${m.ingredientes}</span>
+          </div>
+          <span class="diet-item-prot">${m.proteina || '-'}</span>
+        `;
+        list.appendChild(item);
+      });
+      p.appendChild(list);
+
+      const tipsDiv = document.createElement('div');
+      tipsDiv.className = 'diet-tips';
+      let tipsH = '';
+      if (currentProfile === 1) {
+        tipsH = `
+          <p class="tips-title">💡 Dicas do Geovanne</p>
+          <ul>
+            <li>Não precisa comer 100% perfeito todo dia — busque consistência próxima à meta.</li>
+            <li>Se faltar proteína no dia: suplementação com whey facilita, mas comida limpa é base.</li>
+            <li>Hidratação pesada (3-4L) e sono de qualidade multiplicam os resultados da hipertrofia.</li>
+          </ul>
+        `;
+      } else if (currentProfile === 2) {
+        tipsH = `
+          <p class="tips-title" style="color:var(--orange)">💡 Dicas da Janaina (Mounjaro)</p>
+          <ul>
+            <li>Evite treinar pesado de estômago muito vazio ou logo após refeição pesada (digestão é mais lenta).</li>
+            <li>Priorize a hidratação extrema: o Mounjaro mascara a sede, beba pequenos goles a cada série.</li>
+            <li>Se sentir tontura ou fraqueza repentina, pare e tome uma bebida leve com eletrólitos.</li>
+          </ul>
+        `;
+      } else {
+        tipsH = `
+          <p class="tips-title">💡 Dicas do Matheus (Superávit)</p>
+          <ul>
+            <li>Coma focado: para bater 120g de proteína é necessário constância nas 5 refeições diárias.</li>
+            <li>Em dias de treino pesado, aumente a porção de carboidratos no almoço e pós-treino.</li>
+            <li>Seja disciplinado! A evolução do shape exige consistência tanto na cozinha quanto no smith.</li>
+          </ul>
+        `;
+      }
+      tipsDiv.innerHTML = tipsH;
+      p.appendChild(tipsDiv);
+
+      $m.appendChild(p);
+    }
+
+
+
+
+
+    /* ============================================ ANIMATIONS: CANVAS CONFETTI ============================================ */
+    function triggerConfetti() {
+      const canvas = document.createElement('canvas');
+      canvas.style.position = 'fixed';
+      canvas.style.inset = '0';
+      canvas.style.width = '100vw';
+      canvas.style.height = '100vh';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '9999';
+      document.body.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#e63946', '#ff6b35', '#10b981', '#f59e0b', '#8b5cf6', '#ffffff'];
+
+      for (let i = 0; i < 90; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height * 0.82,
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.72) * 22 - 6,
+          r: Math.random() * 4.5 + 3.5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: 1,
+          decay: Math.random() * 0.014 + 0.009
+        });
+      }
+
+      function anim() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          if (p.alpha > 0) {
+            alive = true;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.45;
+            p.alpha -= p.decay;
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        });
+        if (alive) requestAnimationFrame(anim);
+        else canvas.remove();
+      }
+      anim();
+    }
+
+    // Inicialização automática do Perfil 1 (Geovanne)
     switchProfile(1);
 
     // ============================================================
-    // SPLASH SCREEN — Entra automático após 1.5s com animação
+    // SPLASH SCREEN — Animação automática de entrada
     // ============================================================
     window.addEventListener('load', () => {
-      const splash  = document.getElementById('splashScreen');
+      const splash = document.getElementById('splashScreen');
       const content = document.getElementById('splashContent');
       if (!splash) return;
 
       setTimeout(() => {
-        // Contúedo some com scale down + fade
         if (content) {
           content.style.transition = 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease';
-          content.style.transform  = 'scale(0.85) translateY(-10px)';
-          content.style.opacity    = '0';
+          content.style.transform = 'scale(0.85) translateY(-10px)';
+          content.style.opacity = '0';
         }
-        // Splash some
         setTimeout(() => {
           splash.classList.add('hide');
           setTimeout(() => splash.style.display = 'none', 700);
         }, 300);
       }, 1500);
     });
-
   </script>
 </body>
 
