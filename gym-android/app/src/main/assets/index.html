@@ -235,15 +235,7 @@
       updateNetworkStatus();
     }
 
-    function queueRequest(url, body) {
-      offlineQueue.push({ url, body });
-      saveQueue();
-      if (navigator.onLine) {
-        processOfflineQueue();
-      }
-    }
-
-    function updateNetworkStatus() {
+        function updateNetworkStatus() {
       const statusEl = document.getElementById('networkStatus');
       if (!statusEl) return;
       const textEl = statusEl.querySelector('.status-text');
@@ -482,15 +474,6 @@
     function sc(a, b, c, v) {
       st[k(a, b, c)] = v;
       saveProfileProgressCache();
-      
-      queueRequest('/api/progress', {
-        perfilId: currentProfile,
-        treinoId: a,
-        exercicioId: b,
-        serieIndex: c,
-        concluido: v
-      });
-
       if (v) {
         startRestTimer(a, b);
       }
@@ -628,47 +611,34 @@
       document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
       document.getElementById('hDesc').innerHTML = profilesMeta[p].desc;
 
-      // 1. Resposta Instantânea do Cache Local
-      loadProfileFromCache(p);
+      // Carrega dados diretamente do data.js (offline)
+      D = typeof PROFILES_DATA !== 'undefined' ? PROFILES_DATA[p] || [] : [];
+      diet = typeof DIETAS !== 'undefined' ? DIETAS[p] || [] : [];
+
+      // Carrega progresso e notas do localStorage
+      st = {};
+      notes = {};
+      try {
+        const cachedProgress = localStorage.getItem('gym-progress-' + p);
+        if (cachedProgress) {
+          const progList = JSON.parse(cachedProgress);
+          progList.forEach(r => {
+            st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
+          });
+        }
+        const cachedNotes = localStorage.getItem('gym-notes-' + p);
+        if (cachedNotes) {
+          const notesList = JSON.parse(cachedNotes);
+          notesList.forEach(r => { notes[r.exercicio_id] = r.nota; });
+        }
+      } catch (e) {
+        console.error('Erro ao ler localStorage:', e);
+      }
+
+      if (!D.some(t => t.id === act)) act = 'semana';
       $t.style.display = 'flex';
       renderTabs();
       render();
-
-      // 2. Requisição em background para atualizar
-      try {
-        const [resData, resProg, resDiet, resNotes] = await Promise.all([
-          fetch('/api/data?perfil_id=' + p).then(r => r.json()),
-          fetch('/api/progress?perfil_id=' + p).then(r => r.json()),
-          fetch('/api/diet?perfil_id=' + p).then(r => r.json()),
-          fetch('/api/notes?perfil_id=' + p).then(r => r.json())
-        ]);
-
-        localStorage.setItem(`gym-data-${p}`, JSON.stringify(resData));
-        localStorage.setItem(`gym-progress-${p}`, JSON.stringify(resProg));
-        localStorage.setItem(`gym-diet-${p}`, JSON.stringify(resDiet));
-        localStorage.setItem(`gym-notes-${p}`, JSON.stringify(resNotes));
-
-        if (currentProfile === p) {
-          D = resData;
-          st = {};
-          resProg.forEach(r => {
-            st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
-          });
-          diet = resDiet;
-          notes = {};
-          resNotes.forEach(r => {
-            notes[r.exercicio_id] = r.nota;
-          });
-
-          if (!D.some(t => t.id === act)) {
-            act = 'semana';
-          }
-          renderTabs();
-          render();
-        }
-      } catch (err) {
-        console.warn("Sem conexão para sincronizar perfil. Usando cache local:", err);
-      }
     }
 
     function renderTabs() {
@@ -1044,13 +1014,6 @@
     window.saveNote = function(eid, val) {
       notes[eid] = val;
       saveProfileNotesCache();
-
-      queueRequest('/api/notes', {
-        perfilId: currentProfile,
-        exercicioId: eid,
-        treinoId: act,
-        nota: val
-      });
     };
 
 
