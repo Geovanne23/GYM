@@ -136,6 +136,23 @@
     </footer>
   </div>
 
+  <!-- FLOATING REST TIMER -->
+  <div id="restTimer" class="rest-timer">
+    <div class="timer-circle-wrap">
+      <svg class="timer-svg" viewBox="0 0 80 80">
+        <circle class="timer-bg-circle" cx="40" cy="40" r="36"></circle>
+        <circle id="timerProgress" class="timer-progress-circle" cx="40" cy="40" r="36"></circle>
+      </svg>
+      <div id="timerTime" class="timer-time">60s</div>
+    </div>
+    <div class="timer-controls">
+      <button class="timer-btn" onclick="adjustTimer(-15)">-15s</button>
+      <button id="timerPlayPauseBtn" class="timer-btn" onclick="toggleTimerPlayPause()"><i class="ph-fill ph-pause"></i></button>
+      <button class="timer-btn" onclick="adjustTimer(15)">+15s</button>
+    </div>
+    <button class="timer-close-btn" onclick="closeTimer()"><i class="ph ph-x"></i></button>
+  </div>
+
 
 
   <!-- MODAL -->
@@ -172,6 +189,243 @@
     let notes = {}; // Notas de pesos/cargas de exercícios
     let diet = []; // Dieta do perfil ativo
     let act = 'semana'; // Sub-aba de treino ativa (ex: 'semana', 'treino-a')
+
+    // ==========================================
+    // OFFLINE & PWA LOGIC
+    // ==========================================
+    let offlineQueue = [];
+    try {
+      offlineQueue = JSON.parse(localStorage.getItem('gym-offline-queue') || '[]');
+    } catch (e) {
+      offlineQueue = [];
+    }
+
+    function saveQueue() {
+      localStorage.setItem('gym-offline-queue', JSON.stringify(offlineQueue));
+    }
+
+    async function processOfflineQueue() {
+      if (!navigator.onLine || offlineQueue.length === 0) return;
+      
+      const items = [...offlineQueue];
+      offlineQueue = [];
+      saveQueue();
+
+      for (const item of items) {
+        try {
+          const res = await fetch(item.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item.body)
+          });
+          if (!res.ok) throw new Error('Erro na resposta da sincronização');
+        } catch (err) {
+          console.error("Erro ao sincronizar item, devolvendo à fila:", item, err);
+          offlineQueue.push(item);
+          saveQueue();
+        }
+      }
+      updateNetworkStatus();
+    }
+
+    function queueRequest(url, body) {
+      offlineQueue.push({ url, body });
+      saveQueue();
+      if (navigator.onLine) {
+        processOfflineQueue();
+      }
+    }
+
+    function updateNetworkStatus() {
+      const statusEl = document.getElementById('networkStatus');
+      if (!statusEl) return;
+      const textEl = statusEl.querySelector('.status-text');
+      
+      if (navigator.onLine) {
+        statusEl.classList.remove('offline');
+        statusEl.classList.add('online');
+        textEl.textContent = 'Online';
+        processOfflineQueue();
+      } else {
+        statusEl.classList.remove('online');
+        statusEl.classList.add('offline');
+        textEl.textContent = 'Offline';
+      }
+    }
+
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+    window.addEventListener('DOMContentLoaded', updateNetworkStatus);
+
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('Service Worker registrado:', reg.scope))
+          .catch((err) => console.error('Erro ao registrar Service Worker:', err));
+      });
+    }
+
+    // ==========================================
+    // SCREEN WAKE LOCK API
+    // ==========================================
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator && wakeLock === null) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Wake Lock ativo para manter tela ligada!');
+        }
+      } catch (err) {
+        console.warn(`Erro no Wake Lock: ${err.name}, ${err.message}`);
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock !== null) {
+        wakeLock.release().then(() => {
+          wakeLock = null;
+          console.log('Wake Lock liberado.');
+        });
+      }
+    }
+
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    });
+
+    // ==========================================
+    // FLOATING REST TIMER LOGIC
+    // ==========================================
+    let timerInterval = null;
+    let timerDuration = 60;
+    let timerRemaining = 0;
+    let timerIsPaused = false;
+
+    function getRestDuration(treinoId, exercicioId) {
+      const workout = D.find(w => w.id === treinoId);
+      if (workout && workout.ex) {
+        const exercise = workout.ex.find(e => e.id === exercicioId);
+        if (exercise && exercise.s) {
+          for (const s of exercise.s) {
+            const match = s.d.match(/(\d+)\s*s\s*intervalo/i);
+            if (match) return parseInt(match[1]);
+            const matchMin = s.d.match(/(\d+)\s*min\s*intervalo/i);
+            if (matchMin) return parseInt(matchMin[1]) * 60;
+          }
+        }
+      }
+      return currentProfile === 2 ? 45 : 60; // Padrão
+    }
+
+    function startRestTimer(treinoId, exercicioId) {
+      const duration = getRestDuration(treinoId, exercicioId);
+      timerDuration = duration;
+      timerRemaining = duration;
+      timerIsPaused = false;
+      
+      const timerEl = document.getElementById('restTimer');
+      timerEl.classList.add('active');
+
+      updateTimerUI();
+      
+      if (timerInterval) clearInterval(timerInterval);
+      
+      document.getElementById('timerPlayPauseBtn').innerHTML = '<i class="ph-fill ph-pause"></i>';
+      
+      timerInterval = setInterval(() => {
+        if (!timerIsPaused) {
+          timerRemaining--;
+          updateTimerUI();
+          if (timerRemaining <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            triggerTimerEnd();
+          }
+        }
+      }, 1000);
+    }
+
+    function updateTimerUI() {
+      const timeText = document.getElementById('timerTime');
+      const progressCircle = document.getElementById('timerProgress');
+      
+      timeText.textContent = `${timerRemaining}s`;
+      
+      // Circunferência do círculo = 2 * PI * r = 2 * 3.14159 * 36 ≈ 226.2
+      const strokeDashoffset = 226.2 - (timerRemaining / timerDuration) * 226.2;
+      progressCircle.style.strokeDashoffset = strokeDashoffset;
+    }
+
+    window.toggleTimerPlayPause = function() {
+      timerIsPaused = !timerIsPaused;
+      const btn = document.getElementById('timerPlayPauseBtn');
+      if (timerIsPaused) {
+        btn.innerHTML = '<i class="ph-fill ph-play"></i>';
+      } else {
+        btn.innerHTML = '<i class="ph-fill ph-pause"></i>';
+      }
+    }
+
+    window.adjustTimer = function(secs) {
+      timerRemaining = Math.max(0, timerRemaining + secs);
+      if (timerRemaining > timerDuration) {
+        timerDuration = timerRemaining;
+      }
+      updateTimerUI();
+    }
+
+    window.closeTimer = function() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      document.getElementById('restTimer').classList.remove('active');
+    }
+
+    function triggerTimerEnd() {
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+      
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain1.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc1.start();
+        gain1.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+        osc1.stop(audioCtx.currentTime + 0.3);
+        
+        setTimeout(() => {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(1200, audioCtx.currentTime);
+          gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          osc2.start();
+          gain2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+          osc2.stop(audioCtx.currentTime + 0.4);
+        }, 150);
+      } catch (e) {
+        console.log("Erro ao tocar som:", e);
+      }
+      
+      const timerEl = document.getElementById('restTimer');
+      timerEl.classList.add('pulse');
+      setTimeout(() => {
+        timerEl.classList.remove('pulse');
+        closeTimer();
+      }, 1000);
+    }
 
     const profilesMeta = {
       1: {
@@ -220,17 +474,19 @@
 
     function sc(a, b, c, v) {
       st[k(a, b, c)] = v;
-      fetch('/api/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          perfilId: currentProfile,
-          treinoId: a,
-          exercicioId: b,
-          serieIndex: c,
-          concluido: v
-        })
-      }).catch(e => console.error(e));
+      saveProfileProgressCache();
+      
+      queueRequest('/api/progress', {
+        perfilId: currentProfile,
+        treinoId: a,
+        exercicioId: b,
+        serieIndex: c,
+        concluido: v
+      });
+
+      if (v) {
+        startRestTimer(a, b);
+      }
     }
 
     function ed(tid, eid, len) { for (let i = 0; i < len; i++) if (!gc(tid, eid, i)) return false; return len > 0 }
@@ -285,6 +541,71 @@
       if (p.includes('treino e')) return 'treino-e'; return null;
     }
 
+    // Caching Helpers
+    function loadProfileFromCache(p) {
+      try {
+        const cachedData = localStorage.getItem(`gym-data-${p}`);
+        const cachedProgress = localStorage.getItem(`gym-progress-${p}`);
+        const cachedDiet = localStorage.getItem(`gym-diet-${p}`);
+        const cachedNotes = localStorage.getItem(`gym-notes-${p}`);
+
+        if (cachedData) D = JSON.parse(cachedData);
+        else D = [];
+
+        st = {};
+        if (cachedProgress) {
+          const progList = JSON.parse(cachedProgress);
+          progList.forEach(r => {
+            st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
+          });
+        }
+
+        if (cachedDiet) diet = JSON.parse(cachedDiet);
+        else diet = [];
+
+        notes = {};
+        if (cachedNotes) {
+          const notesList = JSON.parse(cachedNotes);
+          notesList.forEach(r => {
+            notes[r.exercicio_id] = r.nota;
+          });
+        }
+      } catch (e) {
+        console.error("Erro ao ler cache do perfil:", e);
+      }
+    }
+
+    function saveProfileProgressCache() {
+      try {
+        const progList = [];
+        Object.entries(st).forEach(([key, val]) => {
+          const parts = key.split('|');
+          if (parts.length === 3) {
+            progList.push({
+              treino_id: parts[0],
+              exercicio_id: parts[1],
+              serie_index: parseInt(parts[2]),
+              concluido: val ? 1 : 0
+            });
+          }
+        });
+        localStorage.setItem(`gym-progress-${currentProfile}`, JSON.stringify(progList));
+      } catch (e) {}
+    }
+
+    function saveProfileNotesCache() {
+      try {
+        const notesList = [];
+        Object.entries(notes).forEach(([key, val]) => {
+          notesList.push({
+            exercicio_id: key,
+            nota: val
+          });
+        });
+        localStorage.setItem(`gym-notes-${currentProfile}`, JSON.stringify(notesList));
+      } catch (e) {}
+    }
+
     // Alternar Perfil
     async function switchProfile(p) {
       currentProfile = p;
@@ -300,7 +621,13 @@
       document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
       document.getElementById('hDesc').innerHTML = profilesMeta[p].desc;
 
-      // Carregar dados via API
+      // 1. Resposta Instantânea do Cache Local
+      loadProfileFromCache(p);
+      $t.style.display = 'flex';
+      renderTabs();
+      render();
+
+      // 2. Requisição em background para atualizar
       try {
         const [resData, resProg, resDiet, resNotes] = await Promise.all([
           fetch('/api/data?perfil_id=' + p).then(r => r.json()),
@@ -309,23 +636,31 @@
           fetch('/api/notes?perfil_id=' + p).then(r => r.json())
         ]);
 
-        D = resData;
-        st = {};
-        resProg.forEach(r => {
-          st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
-        });
-        diet = resDiet;
-        notes = {};
-        resNotes.forEach(r => {
-          notes[r.exercicio_id] = r.nota;
-        });
+        localStorage.setItem(`gym-data-${p}`, JSON.stringify(resData));
+        localStorage.setItem(`gym-progress-${p}`, JSON.stringify(resProg));
+        localStorage.setItem(`gym-diet-${p}`, JSON.stringify(resDiet));
+        localStorage.setItem(`gym-notes-${p}`, JSON.stringify(resNotes));
 
-        act = 'semana';
-        $t.style.display = 'flex';
-        renderTabs();
-        render();
+        if (currentProfile === p) {
+          D = resData;
+          st = {};
+          resProg.forEach(r => {
+            st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
+          });
+          diet = resDiet;
+          notes = {};
+          resNotes.forEach(r => {
+            notes[r.exercicio_id] = r.nota;
+          });
+
+          if (!D.some(t => t.id === act)) {
+            act = 'semana';
+          }
+          renderTabs();
+          render();
+        }
       } catch (err) {
-        console.error("Erro ao carregar dados do perfil:", err);
+        console.warn("Sem conexão para sincronizar perfil. Usando cache local:", err);
       }
     }
 
@@ -338,28 +673,34 @@
         b.onclick = () => { act = tab.id; renderTabs(); render() };
         $t.appendChild(b);
       });
+
+      // Adiciona aba de Dieta se houver dados
+      if (diet && diet.length > 0) {
+        const b = document.createElement('button');
+        b.className = 'tab' + ('dieta' === act ? ' active' : '');
+        b.textContent = 'Dieta';
+        b.onclick = () => { act = 'dieta'; renderTabs(); render() };
+        $t.appendChild(b);
+      }
+
       const tr = document.createElement('button');
       tr.className = 'tab tab-trash';
       tr.innerHTML = '<i class="ph ph-trash"></i>';
       tr.title = 'Zerar tudo';
 
-      tr.onclick = () => ask(`Zerar TODO o progresso de ${currentProfile === 1 ? 'Geovanne' : currentProfile === 2 ? 'Janaina' : 'Matheus'}? Não pode ser desfeito.`, async () => {
+      tr.onclick = () => ask(`Zerar TODO o progresso de ${currentProfile === 1 ? 'Geovanne' : currentProfile === 2 ? 'Janaina' : 'Matheus'}? Não pode ser desfeito.`, () => {
         const profileBeingReset = currentProfile; // Captura o perfil no momento do clique
-        try {
-          await fetch('/api/progress/all', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ perfilId: profileBeingReset })
-          });
-          // Só limpa o estado em memória se ainda estivermos no mesmo perfil
-          if (currentProfile === profileBeingReset) {
-            st = {};
-            notes = {};
-            render();
-            uprog();
-          }
-        } catch(e) {
-          console.error('Erro ao resetar perfil:', e);
+        st = {};
+        notes = {};
+        saveProfileProgressCache();
+        saveProfileNotesCache();
+
+        queueRequest('/api/progress/all', { perfilId: profileBeingReset });
+
+        // Só limpa o estado em memória se ainda estivermos no mesmo perfil
+        if (currentProfile === profileBeingReset) {
+          render();
+          uprog();
         }
       });
 
@@ -370,8 +711,21 @@
       $m.innerHTML = '';
       uprog();
 
+      if (act === 'dieta') {
+        releaseWakeLock();
+        renderDietView();
+        return;
+      }
+
       const tab = D.find(t => t.id === act);
       if (!tab) return;
+
+      if (tab.type === 'workout') {
+        requestWakeLock();
+      } else {
+        releaseWakeLock();
+      }
+
       if (tab.type === 'week') rWeek(tab);
       else rWork(tab);
     }
@@ -487,41 +841,22 @@
       const cBtn = document.createElement('button'); cBtn.className = 'btn-complete';
       cBtn.innerHTML = '<i class="ph ph-check-circle"></i> Marcar como concluído';
 
-      cBtn.onclick = async () => {
+      cBtn.onclick = () => {
         const v = !wd(tab.id);
         tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = v; }));
         swd(tab.id, v);
+        saveProfileProgressCache();
 
-        try {
-          // Chamar backend para salvar progressão de exercícios
-          const saveRes = await fetch('/api/progress/workout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              perfilId: currentProfile,
-              treinoId: tab.id,
-              exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
-              concluido: v
-            })
-          });
-          
-          if (!saveRes.ok) {
-            console.error('Erro ao salvar progresso:', saveRes.statusText);
-            throw new Error('Falha ao salvar');
-          }
+        queueRequest('/api/progress/workout', {
+          perfilId: currentProfile,
+          treinoId: tab.id,
+          exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
+          concluido: v
+        });
 
-          // Renderizar o treino atual atualizado
-          renderTabs();
-          render();
-          uprog();
-        } catch (err) {
-          console.error('Erro ao marcar treino como concluído:', err);
-          alert('Erro ao salvar progresso. Tente novamente.');
-          // Reverter mudanças se falhar
-          const revV = !v;
-          tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = revV; }));
-          swd(tab.id, revV);
-        }
+        renderTabs();
+        render();
+        uprog();
       };
 
       hd.appendChild(cBtn);
@@ -541,37 +876,20 @@
       const rb = document.createElement('button'); rb.className = 'btn-reset';
       rb.innerHTML = '<i class="ph ph-arrow-counter-clockwise"></i> Zerar treino';
 
-      rb.onclick = () => ask('Zerar o progresso deste treino?', async () => {
+      rb.onclick = () => ask('Zerar o progresso deste treino?', () => {
         tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = false; }));
         swd(tab.id, false);
+        saveProfileProgressCache();
 
-        try {
-          // Use separate reset endpoint that doesn't touch logs_treino (history)
-          const resetRes = await fetch('/api/progress/reset', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              perfilId: currentProfile,
-              treinoId: tab.id,
-              exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length }))
-            })
-          });
+        queueRequest('/api/progress/reset', {
+          perfilId: currentProfile,
+          treinoId: tab.id,
+          exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length }))
+        });
 
-          if (!resetRes.ok) throw new Error('Falha ao resetar');
-
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-          // Just update the current view
-          renderTabs();
-          render();
-          uprog();
-        } catch (err) {
-          console.error('Erro ao resetar treino:', err);
-          alert('Erro ao resetar progresso.');
-          // Reverter mudanças se falhar
-          tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = true; }));
-          swd(tab.id, true);
-        }
+        renderTabs();
+        render();
+        uprog();
       });
 
       rw.appendChild(rb); p.appendChild(rw);
@@ -718,16 +1036,14 @@
     // Salvar cargas/notas de exercícios no servidor
     window.saveNote = function(eid, val) {
       notes[eid] = val;
-      fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          perfilId: currentProfile,
-          exercicioId: eid,
-          treinoId: act,
-          nota: val
-        })
-      }).catch(e => console.error("Erro ao salvar anotação:", e));
+      saveProfileNotesCache();
+
+      queueRequest('/api/notes', {
+        perfilId: currentProfile,
+        exercicioId: eid,
+        treinoId: act,
+        nota: val
+      });
     };
 
 
