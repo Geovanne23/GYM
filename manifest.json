@@ -1,24 +1,59 @@
 {
   "name": "Além da Genética",
-  "short_name": "GYM",
+  "short_name": "Além da Genética",
   "description": "Plano de treino semanal com técnicas avançadas de hipertrofia.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#080809",
-  "theme_color": "#060609",
+  "theme_color": "#080809",
   "orientation": "portrait-primary",
   "icons": [
     {
       "src": "img/icon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "img/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "img/icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "img/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Geovanne (Metodologia)",
+      "short_name": "Geovanne",
+      "description": "Abrir o perfil do Geovanne",
+      "url": "/?profile=1",
+      "icons": [{ "src": "img/icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Janaina (Condicionamento)",
+      "short_name": "Janaina",
+      "description": "Abrir o perfil da Janaina",
+      "url": "/?profile=2",
+      "icons": [{ "src": "img/icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Matheus (Divisão ABCD)",
+      "short_name": "Matheus",
+      "description": "Abrir o perfil do Matheus",
+      "url": "/?profile=3",
+      "icons": [{ "src": "img/icon.png", "sizes": "192x192" }]
     }
   ]
 }
