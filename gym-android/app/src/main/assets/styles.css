@@ -147,6 +147,45 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1rem 4rem;
+}
+
+@media (max-width: 900px) {
+  .app {
+    padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem 3rem;
+  }
+  .profile-tabs {
+    margin-bottom: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .bg {
+    opacity: 0.5;
+  }
+  .orb {
+    animation: none;
+    will-change: auto;
+  }
+  .bg::after {
+    opacity: 0.2;
+  }
+  .reveal {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+  .profile-tabs {
+    margin-top: 14px;
+  }
 }
 
 ::-webkit-scrollbar {
@@ -289,7 +328,11 @@ body {
   z-index: 1;
   max-width: 680px;
   margin: 0 auto;
-  padding: 1.5rem 1rem 4rem;
+  padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1rem 4rem;
+}
+
+.header {
+  margin-top: 8px;
 }
 
 /* ==================================================================
@@ -298,7 +341,7 @@ body {
 .profile-tabs {
   display: flex;
   gap: 6px;
-  margin-bottom: 24px;
+  margin: 12px 0 24px;
   background: var(--s2);
   padding: 6px;
   border-radius: 18px;
