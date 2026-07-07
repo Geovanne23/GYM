@@ -272,9 +272,22 @@ function handleApi(req, res) {
     return;
   }
 
+  // Helper: retorna a semana atual no formato 'AAAA-WNN' (ex: '2026-W28')
+  // Isso garante que o progresso seja isolado por semana calendária.
+  function getCurrentSemana() {
+    const now = new Date();
+    const year = now.getFullYear();
+    // Calcula o número da semana ISO (segunda-feira como início)
+    const startOfYear = new Date(year, 0, 1);
+    const dayOfYear = Math.floor((now - startOfYear) / 86400000) + 1;
+    const weekNum = Math.ceil((dayOfYear + startOfYear.getDay()) / 7);
+    return `${year}-W${String(weekNum).padStart(2, '0')}`;
+  }
+
   if (pathname === '/api/progress' && req.method === 'GET') {
     const perfilId = urlParams.searchParams.get('perfil_id');
-    db.all('SELECT * FROM progresso WHERE perfil_id = ?', [perfilId], (err, rows) => {
+    const semana = getCurrentSemana();
+    db.all('SELECT * FROM progresso WHERE perfil_id = ? AND semana = ?', [perfilId, semana], (err, rows) => {
       if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
       res.writeHead(200); res.end(JSON.stringify(rows));
     });
@@ -287,11 +300,12 @@ function handleApi(req, res) {
     req.on('end', () => {
       try {
         const { perfilId, treinoId, exercicioId, serieIndex, concluido } = JSON.parse(body);
-        db.run(`INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido) 
-                VALUES (?, ?, ?, ?, ?) 
+        const semana = getCurrentSemana();
+        db.run(`INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido, semana) 
+                VALUES (?, ?, ?, ?, ?, ?) 
                 ON CONFLICT(perfil_id, treino_id, exercicio_id, serie_index) 
-                DO UPDATE SET concluido = excluded.concluido`,
-          [perfilId, treinoId, exercicioId, serieIndex, concluido ? 1 : 0],
+                DO UPDATE SET concluido = excluded.concluido, semana = excluded.semana`,
+          [perfilId, treinoId, exercicioId, serieIndex, concluido ? 1 : 0, semana],
           function(err) {
             if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
             res.writeHead(200); res.end(JSON.stringify({success: true}));
@@ -310,6 +324,7 @@ function handleApi(req, res) {
      req.on('end', () => {
        try {
          const { perfilId, treinoId, exercicios, concluido } = JSON.parse(body);
+         const semana = getCurrentSemana();
          
          // Use serialize to ensure all operations complete before responding
          db.serialize(() => {
@@ -318,11 +333,11 @@ function handleApi(req, res) {
            for (const ex of exercicios) {
              for (let i = 0; i < ex.numSets; i++) {
                db.run(
-                 `INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido) 
-                  VALUES (?, ?, ?, ?, ?) 
+                 `INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido, semana) 
+                  VALUES (?, ?, ?, ?, ?, ?) 
                   ON CONFLICT(perfil_id, treino_id, exercicio_id, serie_index) 
-                  DO UPDATE SET concluido = excluded.concluido`,
-                 [perfilId, treinoId, ex.id, i, concluido ? 1 : 0]
+                  DO UPDATE SET concluido = excluded.concluido, semana = excluded.semana`,
+                 [perfilId, treinoId, ex.id, i, concluido ? 1 : 0, semana]
                );
              }
            }
@@ -351,8 +366,10 @@ function handleApi(req, res) {
      req.on('end', () => {
        try {
          const { perfilId } = JSON.parse(body);
+         const semana = getCurrentSemana();
          db.serialize(() => {
-           db.run('DELETE FROM progresso WHERE perfil_id = ?', [perfilId]);
+           // Deleta o progresso da semana atual e notas
+           db.run('DELETE FROM progresso WHERE perfil_id = ? AND semana = ?', [perfilId, semana]);
            db.run('DELETE FROM notas_exercicio WHERE perfil_id = ?', [perfilId], (err) => {
              if (err) { res.writeHead(500); return res.end(JSON.stringify({error: err.message})); }
              res.writeHead(200); res.end(JSON.stringify({success: true}));
@@ -371,6 +388,7 @@ function handleApi(req, res) {
      req.on('end', () => {
        try {
          const { perfilId, treinoId, exercicios } = JSON.parse(body);
+         const semana = getCurrentSemana();
          
          // Reset progress to false WITHOUT deleting from logs_treino (keeps history)
          db.serialize(() => {
@@ -378,11 +396,11 @@ function handleApi(req, res) {
            for (const ex of exercicios) {
              for (let i = 0; i < ex.numSets; i++) {
                db.run(
-                 `INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido) 
-                  VALUES (?, ?, ?, ?, 0) 
+                 `INSERT INTO progresso (perfil_id, treino_id, exercicio_id, serie_index, concluido, semana) 
+                  VALUES (?, ?, ?, ?, 0, ?) 
                   ON CONFLICT(perfil_id, treino_id, exercicio_id, serie_index) 
-                  DO UPDATE SET concluido = 0`,
-                 [perfilId, treinoId, ex.id, i]
+                  DO UPDATE SET concluido = 0, semana = excluded.semana`,
+                 [perfilId, treinoId, ex.id, i, semana]
                );
              }
            }

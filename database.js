@@ -9,6 +9,11 @@ const db = new sqlite3.Database(dbPath, (err) => {
     console.error('Erro ao conectar ao banco de dados SQLite:', err.message);
   } else {
     console.log('Conectado ao banco de dados SQLite.');
+    // Migração automática: adiciona coluna 'semana' se não existir
+    // Isso garante isolamento do progresso por semana calendária
+    db.run(`ALTER TABLE progresso ADD COLUMN semana TEXT DEFAULT ''`, () => {
+      /* ignora erro "duplicate column" — significa que já existe */
+    });
   }
 });
 
@@ -54,16 +59,20 @@ function initDB() {
       )`);
 
       // Tabela de progresso (qual série foi concluída)
-      // perfil_id, treino_id, exercicio_id, serie_index, concluido
+      // perfil_id, treino_id, exercicio_id, serie_index, concluido, semana
       db.run(`CREATE TABLE IF NOT EXISTS progresso (
         perfil_id INTEGER,
         treino_id TEXT,
         exercicio_id TEXT,
         serie_index INTEGER,
         concluido BOOLEAN DEFAULT 0,
+        semana TEXT DEFAULT '',
         PRIMARY KEY (perfil_id, treino_id, exercicio_id, serie_index),
         FOREIGN KEY(perfil_id) REFERENCES perfis(id)
       )`);
+
+      // Migração: adicionar coluna semana se não existir
+      db.run(`ALTER TABLE progresso ADD COLUMN semana TEXT DEFAULT ''`, () => {/* ignora erro se já existir */});
 
       // Tabela de dieta
       db.run(`CREATE TABLE IF NOT EXISTS dieta (
