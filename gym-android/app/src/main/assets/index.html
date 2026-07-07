@@ -198,53 +198,37 @@
     let act = 'semana'; // Sub-aba de treino ativa (ex: 'semana', 'treino-a')
 
     // ==========================================
-    // OFFLINE & PWA LOGIC
+    // ONLINE API LOGIC
     // ==========================================
-    let offlineQueue = [];
-    try {
-      offlineQueue = JSON.parse(localStorage.getItem('gym-offline-queue') || '[]');
-    } catch (e) {
-      offlineQueue = [];
-    }
+    const API_BASE_URL = (window.__GYM_API_BASE__ || (window.location.protocol === 'http:' || window.location.protocol === 'https:' ? window.location.origin : 'http://10.0.2.2:3000')).replace(/\/$/, '');
 
-    function saveQueue() {
-      localStorage.setItem('gym-offline-queue', JSON.stringify(offlineQueue));
-    }
-
-    async function processOfflineQueue() {
-      if (!navigator.onLine || offlineQueue.length === 0) return;
-      
-      const items = [...offlineQueue];
-      offlineQueue = [];
-      saveQueue();
-
-      for (const item of items) {
-        try {
-          const res = await fetch(item.url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item.body)
-          });
-          if (!res.ok) throw new Error('Erro na resposta da sincronização');
-        } catch (err) {
-          console.error("Erro ao sincronizar item, devolvendo à fila:", item, err);
-          offlineQueue.push(item);
-          saveQueue();
-        }
+    async function apiRequest(path, options = {}) {
+      const url = `${API_BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
+      const headers = Object.assign({}, options.headers || {});
+      if (options.body && !(headers['Content-Type'] || headers['content-type'])) {
+        headers['Content-Type'] = 'application/json';
       }
-      updateNetworkStatus();
+
+      const res = await fetch(url, { ...options, headers });
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+
+      if (!res.ok) {
+        throw new Error(typeof data === 'string' ? data : (data && data.error) || `Erro ${res.status}`);
+      }
+
+      return data;
     }
 
-        function updateNetworkStatus() {
+    function updateNetworkStatus() {
       const statusEl = document.getElementById('networkStatus');
       if (!statusEl) return;
       const textEl = statusEl.querySelector('.status-text');
-      
       if (navigator.onLine) {
         statusEl.classList.remove('offline');
         statusEl.classList.add('online');
         textEl.textContent = 'Online';
-        processOfflineQueue();
       } else {
         statusEl.classList.remove('online');
         statusEl.classList.add('offline');
@@ -255,15 +239,6 @@
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
     window.addEventListener('DOMContentLoaded', updateNetworkStatus);
-
-    // Registrar Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((reg) => console.log('Service Worker registrado:', reg.scope))
-          .catch((err) => console.error('Erro ao registrar Service Worker:', err));
-      });
-    }
 
     // ==========================================
     // SCREEN WAKE LOCK API
@@ -477,6 +452,17 @@
       if (v) {
         startRestTimer(a, b);
       }
+
+      apiRequest('/api/progress', {
+        method: 'POST',
+        body: JSON.stringify({
+          perfilId: currentProfile,
+          treinoId: a,
+          exercicioId: b,
+          serieIndex: c,
+          concluido: !!v
+        })
+      }).catch(err => console.error('Erro ao salvar progresso online:', err));
     }
 
     function ed(tid, eid, len) { for (let i = 0; i < len; i++) if (!gc(tid, eid, i)) return false; return len > 0 }
@@ -611,28 +597,34 @@
       document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
       document.getElementById('hDesc').innerHTML = profilesMeta[p].desc;
 
-      // Carrega dados diretamente do data.js (offline)
-      D = typeof PROFILES_DATA !== 'undefined' ? PROFILES_DATA[p] || [] : [];
-      diet = typeof DIETAS !== 'undefined' ? DIETAS[p] || [] : [];
-
-      // Carrega progresso e notas do localStorage
-      st = {};
-      notes = {};
       try {
-        const cachedProgress = localStorage.getItem('gym-progress-' + p);
-        if (cachedProgress) {
-          const progList = JSON.parse(cachedProgress);
-          progList.forEach(r => {
+        const [dataResponse, progressResponse, dietResponse, notesResponse] = await Promise.all([
+          apiRequest(`/api/data?perfil_id=${p}`),
+          apiRequest(`/api/progress?perfil_id=${p}`),
+          apiRequest(`/api/diet?perfil_id=${p}`),
+          apiRequest(`/api/notes?perfil_id=${p}`)
+        ]);
+
+        D = Array.isArray(dataResponse) ? dataResponse : [];
+        diet = Array.isArray(dietResponse) ? dietResponse : [];
+
+        st = {};
+        if (Array.isArray(progressResponse)) {
+          progressResponse.forEach(r => {
             st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
           });
         }
-        const cachedNotes = localStorage.getItem('gym-notes-' + p);
-        if (cachedNotes) {
-          const notesList = JSON.parse(cachedNotes);
-          notesList.forEach(r => { notes[r.exercicio_id] = r.nota; });
+
+        notes = {};
+        if (Array.isArray(notesResponse)) {
+          notesResponse.forEach(r => {
+            notes[r.exercicio_id] = r.nota;
+          });
         }
       } catch (e) {
-        console.error('Erro ao ler localStorage:', e);
+        console.error('Erro ao carregar dados online:', e);
+        window.alert('Não foi possível carregar os dados online. Verifique o servidor e tente novamente.');
+        return;
       }
 
       if (!D.some(t => t.id === act)) act = 'semana';
@@ -672,7 +664,10 @@
         saveProfileProgressCache();
         saveProfileNotesCache();
 
-        queueRequest('/api/progress/all', { perfilId: profileBeingReset });
+        apiRequest('/api/progress/all', {
+          method: 'POST',
+          body: JSON.stringify({ perfilId: profileBeingReset })
+        }).catch(err => console.error('Erro ao zerar progresso online:', err));
 
         // Só limpa o estado em memória se ainda estivermos no mesmo perfil
         if (currentProfile === profileBeingReset) {
@@ -824,12 +819,15 @@
         swd(tab.id, v);
         saveProfileProgressCache();
 
-        queueRequest('/api/progress/workout', {
-          perfilId: currentProfile,
-          treinoId: tab.id,
-          exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
-          concluido: v
-        });
+        apiRequest('/api/progress/workout', {
+          method: 'POST',
+          body: JSON.stringify({
+            perfilId: currentProfile,
+            treinoId: tab.id,
+            exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
+            concluido: v
+          })
+        }).catch(err => console.error('Erro ao atualizar treino online:', err));
 
         renderTabs();
         render();
@@ -858,11 +856,14 @@
         swd(tab.id, false);
         saveProfileProgressCache();
 
-        queueRequest('/api/progress/reset', {
-          perfilId: currentProfile,
-          treinoId: tab.id,
-          exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length }))
-        });
+        apiRequest('/api/progress/reset', {
+          method: 'POST',
+          body: JSON.stringify({
+            perfilId: currentProfile,
+            treinoId: tab.id,
+            exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length }))
+          })
+        }).catch(err => console.error('Erro ao resetar treino online:', err));
 
         renderTabs();
         render();
@@ -1014,6 +1015,19 @@
     window.saveNote = function(eid, val) {
       notes[eid] = val;
       saveProfileNotesCache();
+
+      const treinoId = (D || []).find(tab => (tab.ex || []).some(ex => ex.id === eid))?.id;
+      if (treinoId) {
+        apiRequest('/api/notes', {
+          method: 'POST',
+          body: JSON.stringify({
+            perfilId: currentProfile,
+            exercicioId: eid,
+            treinoId,
+            nota: val
+          })
+        }).catch(err => console.error('Erro ao salvar nota online:', err));
+      }
     };
 
 

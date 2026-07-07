@@ -26,7 +26,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
-    private val SITE_URL = "file:///android_asset/index.html"
+    private val SITE_URL = "http://10.0.2.2:3000/"
     private val NOTIFICATION_PERMISSION_CODE = 100
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -70,10 +70,10 @@ class MainActivity : ComponentActivity() {
         settings.databaseEnabled = true
         settings.cacheMode = WebSettings.LOAD_DEFAULT
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        settings.allowFileAccess = true
-        settings.allowContentAccess = true
-        settings.allowFileAccessFromFileURLs = true
-        settings.allowUniversalAccessFromFileURLs = true
+        settings.allowFileAccess = false
+        settings.allowContentAccess = false
+        settings.allowFileAccessFromFileURLs = false
+        settings.allowUniversalAccessFromFileURLs = false
         settings.loadsImagesAutomatically = true
         settings.javaScriptCanOpenWindowsAutomatically = true
         settings.mediaPlaybackRequiresUserGesture = false
