@@ -27,7 +27,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
-    private val SITE_URL = "http://10.0.2.2:3000/"
+    private val SITE_URL = "https://gym.capitaum.online/"
     private val NOTIFICATION_PERMISSION_CODE = 100
 
     @SuppressLint("SetJavaScriptEnabled")

@@ -204,7 +204,7 @@
     // ==========================================
     // ONLINE API LOGIC
     // ==========================================
-    const API_BASE_URL = (window.__GYM_API_BASE__ || (window.location.protocol === 'http:' || window.location.protocol === 'https:' ? window.location.origin : 'http://10.0.2.2:3000')).replace(/\/$/, '');
+    const API_BASE_URL = (window.__GYM_API_BASE__ || 'https://gym.capitaum.online').replace(/\/$/, '');
 
     async function apiRequest(path, options = {}) {
       const url = `${API_BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
