@@ -49,9 +49,15 @@ const safeSplash = `// SPLASH SCREEN — Animação automática de entrada
 
 html = html.replace(splashRegex, safeSplash);
 
-// Remover service worker initialization
-const swRegex = /if \('serviceWorker' in navigator\) \{[\s\S]+?\}/m;
-html = html.replace(swRegex, '// SW disabled for Android asset');
+// Remover service worker initialization safely
+const swCode = `    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('Service Worker registrado:', reg.scope))
+          .catch((err) => console.error('Erro ao registrar Service Worker:', err));
+      });
+    }`;
+html = html.replace(swCode, '// SW disabled for Android asset');
 
 fs.writeFileSync('gym-android/app/src/main/assets/index.html', html);
 console.log('Fixed index.html size: ' + html.length);

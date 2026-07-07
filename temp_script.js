@@ -1,4 +1,13 @@
 
+    window.onerror = function(m, u, l, c, e) {
+      var s = document.getElementById("splashScreen");
+      if(s) s.innerHTML += '<div style="color:red;z-index:9999;position:absolute;top:0;font-size:12px">ERR: ' + m + ' na linha ' + l + '</div>';
+    };
+    window.addEventListener("unhandledrejection", function(e) {
+      var s = document.getElementById("splashScreen");
+      if(s) s.innerHTML += '<div style="color:red;z-index:9999;position:absolute;top:20px;font-size:12px">PROMISE ERR: ' + e.reason + '</div>';
+    });
+
     let currentProfile = 1;
     let D = []; // Dados de treino do perfil ativo
     let st = {}; // Estado de progresso (concluído ou não)
@@ -73,7 +82,44 @@
     window.addEventListener('offline', updateNetworkStatus);
     window.addEventListener('DOMContentLoaded', updateNetworkStatus);
 
-    // Service Worker desativado no app Android
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('Service Worker registrado:', reg.scope))
+          .catch((err) => console.error('Erro ao registrar Service Worker:', err));
+      });
+    }
+
+    // ==========================================
+    // SCREEN WAKE LOCK API
+    // ==========================================
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator && wakeLock === null) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Wake Lock ativo para manter tela ligada!');
+        }
+      } catch (err) {
+        console.warn(`Erro no Wake Lock: ${err.name}, ${err.message}`);
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock !== null) {
+        wakeLock.release().then(() => {
+          wakeLock = null;
+          console.log('Wake Lock liberado.');
+        });
+      }
+    }
+
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    });
 
     // ==========================================
     // FLOATING REST TIMER LOGIC
@@ -254,7 +300,15 @@
     function sc(a, b, c, v) {
       st[k(a, b, c)] = v;
       saveProfileProgressCache();
-      // Offline: progresso salvo apenas no localStorage
+      
+      queueRequest('/api/progress', {
+        perfilId: currentProfile,
+        treinoId: a,
+        exercicioId: b,
+        serieIndex: c,
+        concluido: v
+      });
+
       if (v) {
         startRestTimer(a, b);
       }
@@ -377,8 +431,8 @@
       } catch (e) {}
     }
 
-    // Alternar Perfil — 100% offline (dados locais de data.js)
-    function switchProfile(p) {
+    // Alternar Perfil
+    async function switchProfile(p) {
       currentProfile = p;
       document.body.classList.toggle('theme-p1', p === 1);
       document.body.classList.toggle('theme-emagrecimento', p === 2);
@@ -392,34 +446,47 @@
       document.getElementById('hTitle').innerHTML = profilesMeta[p].title;
       document.getElementById('hDesc').innerHTML = profilesMeta[p].desc;
 
-      // Carrega dados diretamente do data.js (offline)
-      D = PROFILES_DATA[p] || [];
-      diet = DIETAS[p] || [];
-
-      // Carrega progresso e notas do localStorage
-      st = {};
-      notes = {};
-      try {
-        const cachedProgress = localStorage.getItem('gym-progress-' + p);
-        if (cachedProgress) {
-          const progList = JSON.parse(cachedProgress);
-          progList.forEach(r => {
-            st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
-          });
-        }
-        const cachedNotes = localStorage.getItem('gym-notes-' + p);
-        if (cachedNotes) {
-          const notesList = JSON.parse(cachedNotes);
-          notesList.forEach(r => { notes[r.exercicio_id] = r.nota; });
-        }
-      } catch (e) {
-        console.error('Erro ao ler localStorage:', e);
-      }
-
-      if (!D.some(t => t.id === act)) act = 'semana';
+      // 1. Resposta Instantânea do Cache Local
+      loadProfileFromCache(p);
       $t.style.display = 'flex';
       renderTabs();
       render();
+
+      // 2. Requisição em background para atualizar
+      try {
+        const [resData, resProg, resDiet, resNotes] = await Promise.all([
+          fetch('/api/data?perfil_id=' + p).then(r => r.json()),
+          fetch('/api/progress?perfil_id=' + p).then(r => r.json()),
+          fetch('/api/diet?perfil_id=' + p).then(r => r.json()),
+          fetch('/api/notes?perfil_id=' + p).then(r => r.json())
+        ]);
+
+        localStorage.setItem(`gym-data-${p}`, JSON.stringify(resData));
+        localStorage.setItem(`gym-progress-${p}`, JSON.stringify(resProg));
+        localStorage.setItem(`gym-diet-${p}`, JSON.stringify(resDiet));
+        localStorage.setItem(`gym-notes-${p}`, JSON.stringify(resNotes));
+
+        if (currentProfile === p) {
+          D = resData;
+          st = {};
+          resProg.forEach(r => {
+            st[k(r.treino_id, r.exercicio_id, r.serie_index)] = r.concluido === 1;
+          });
+          diet = resDiet;
+          notes = {};
+          resNotes.forEach(r => {
+            notes[r.exercicio_id] = r.nota;
+          });
+
+          if (!D.some(t => t.id === act)) {
+            act = 'semana';
+          }
+          renderTabs();
+          render();
+        }
+      } catch (err) {
+        console.warn("Sem conexão para sincronizar perfil. Usando cache local:", err);
+      }
     }
 
     function renderTabs() {
@@ -447,12 +514,15 @@
       tr.title = 'Zerar tudo';
 
       tr.onclick = () => ask(`Zerar TODO o progresso de ${currentProfile === 1 ? 'Geovanne' : currentProfile === 2 ? 'Janaina' : 'Matheus'}? Não pode ser desfeito.`, () => {
-        const profileBeingReset = currentProfile;
+        const profileBeingReset = currentProfile; // Captura o perfil no momento do clique
         st = {};
         notes = {};
         saveProfileProgressCache();
         saveProfileNotesCache();
-        // Offline: apenas limpa localStorage, sem sincronizar com servidor
+
+        queueRequest('/api/progress/all', { perfilId: profileBeingReset });
+
+        // Só limpa o estado em memória se ainda estivermos no mesmo perfil
         if (currentProfile === profileBeingReset) {
           render();
           uprog();
@@ -601,7 +671,14 @@
         tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = v; }));
         swd(tab.id, v);
         saveProfileProgressCache();
-        // Offline: apenas localStorage
+
+        queueRequest('/api/progress/workout', {
+          perfilId: currentProfile,
+          treinoId: tab.id,
+          exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length })),
+          concluido: v
+        });
+
         renderTabs();
         render();
         uprog();
@@ -628,7 +705,13 @@
         tab.ex.forEach(e => e.s.forEach((_, i) => { st[k(tab.id, e.id, i)] = false; }));
         swd(tab.id, false);
         saveProfileProgressCache();
-        // Offline: apenas localStorage
+
+        queueRequest('/api/progress/reset', {
+          perfilId: currentProfile,
+          treinoId: tab.id,
+          exercicios: tab.ex.map(e => ({ id: e.id, numSets: e.s.length }))
+        });
+
         renderTabs();
         render();
         uprog();
@@ -775,11 +858,17 @@
       }
     };
 
-    // Salvar cargas/notas de exercícios (apenas localStorage)
+    // Salvar cargas/notas de exercícios no servidor
     window.saveNote = function(eid, val) {
       notes[eid] = val;
       saveProfileNotesCache();
-      // Offline: sem envio para servidor
+
+      queueRequest('/api/notes', {
+        perfilId: currentProfile,
+        exercicioId: eid,
+        treinoId: act,
+        nota: val
+      });
     };
 
 
@@ -1164,7 +1253,6 @@
 
     // ============================================================
     // SPLASH SCREEN — Animação automática de entrada
-    // ============================================================
     function hideSplash() {
       const splash = document.getElementById('splashScreen');
       const content = document.getElementById('splashContent');
@@ -1181,10 +1269,9 @@
           splash.classList.add('hide');
           setTimeout(() => splash.style.display = 'none', 700);
         }, 300);
-      }, 500); // 500ms
+      }, 500);
     }
-
     document.addEventListener('DOMContentLoaded', hideSplash);
     window.addEventListener('load', hideSplash);
-    setTimeout(hideSplash, 2500); // Fallback de segurança
+    setTimeout(hideSplash, 2500);
   
