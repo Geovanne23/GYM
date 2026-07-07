@@ -184,10 +184,14 @@
     window.onerror = function(m, u, l, c, e) {
       var s = document.getElementById("splashScreen");
       if(s) s.innerHTML += '<div style="color:red;z-index:9999;position:absolute;top:0;font-size:12px">ERR: ' + m + ' na linha ' + l + '</div>';
+      document.body.style.background = '#080809';
+      document.body.style.color = '#f4f4f5';
     };
     window.addEventListener("unhandledrejection", function(e) {
       var s = document.getElementById("splashScreen");
       if(s) s.innerHTML += '<div style="color:red;z-index:9999;position:absolute;top:20px;font-size:12px">PROMISE ERR: ' + e.reason + '</div>';
+      document.body.style.background = '#080809';
+      document.body.style.color = '#f4f4f5';
     });
 
     let currentProfile = 1;

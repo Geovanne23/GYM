@@ -12,6 +12,7 @@ import android.webkit.GeolocationPermissions
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -70,6 +71,9 @@ class MainActivity : ComponentActivity() {
         settings.databaseEnabled = true
         settings.cacheMode = WebSettings.LOAD_DEFAULT
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        settings.setSupportZoom(false)
+        settings.builtInZoomControls = false
+        settings.displayZoomControls = false
         settings.allowFileAccess = false
         settings.allowContentAccess = false
         settings.allowFileAccessFromFileURLs = false
@@ -92,13 +96,11 @@ class MainActivity : ComponentActivity() {
                 request: WebResourceRequest?
             ): Boolean {
                 val url = request?.url?.toString() ?: return false
-                // Sempre mantém a navegação dentro do WebView
                 return false
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                // Marca como app nativo para suprimir banners PWA
                 view?.evaluateJavascript(
                     """
                     (function() {
@@ -106,9 +108,27 @@ class MainActivity : ComponentActivity() {
                       var banner = document.getElementById('installBanner');
                       if (banner) banner.style.display = 'none';
                       window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); });
+                      if (document.getElementById('splashScreen')) {
+                        document.getElementById('splashScreen').style.display = 'none';
+                      }
+                      document.body.style.background = '#080809';
+                      document.body.style.color = '#f4f4f5';
                     })();
                     """.trimIndent(), null
                 )
+            }
+
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                if (request?.url?.toString()?.contains("10.0.2.2") == true) {
+                    view?.evaluateJavascript(
+                        """
+                        (function() {
+                          document.body.innerHTML = '<div style=\"font-family:Arial,sans-serif;background:#080809;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;padding:24px;text-align:center;\">Erro ao carregar o app. Verifique se o servidor Node está rodando em http://10.0.2.2:3000/</div>';
+                        })();
+                        """.trimIndent(), null
+                    )
+                }
             }
         }
 
